@@ -1,0 +1,6 @@
+# ==============================================================================
+# Quartus Prime QIP Index File
+# ==============================================================================
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "scanlines_top.v"]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "scanlines_horizontal.v"]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "scanlines_vertical.v"]
