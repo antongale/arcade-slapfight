@@ -209,6 +209,7 @@ wire [8:0] HPIX_LT;
 foreground_layer slap_foreground(
 	.master_clk(clkm_36MHZ),
 	.pixel_clk(pixel_clk),
+	.pcb(pcb),	
 	.VPIX(VPIX),
 	.HPIX(HPIX),
 	.SCREEN_FLIP(IO2_SF),
@@ -264,6 +265,7 @@ sprite_layer slap_sprites(
 	.pixel_clk(pixel_clk),
 	.npixel_clk(clk_6M_1),
 	.pixel_clk_lb(clk_6M_3),
+	.pcb(pcb),	
 	.VPIX(VPIX),
 	.HPIX(HPIX),
 	.HPIX_LT(HPIX_LT),
