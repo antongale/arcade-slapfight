@@ -11,6 +11,58 @@
                 "value": 1
             },
             {
+                "name": "Scanlines",
+                "id": 100,
+                "type": "list",
+                "enabled": true,
+                "persist": true,
+                "address": "0xF3000000",
+                "mask": "0xFFFFFFF0",
+                "defaultval": 0,
+                "options": [
+                    {
+                        "name": "Disabled",
+                        "value": 0
+                    },
+                    {
+                        "name": "Horizontal Soft",
+                        "value": 1
+                    },
+                    {
+                        "name": "Horizontal Medium",
+                        "value": 2
+                    },
+                    {
+                        "name": "Horizontal Hard",
+                        "value": 3
+                    },
+                    {
+                        "name": "Vertical Soft",
+                        "value": 4
+                    },
+                    {
+                        "name": "Vertical Medium",
+                        "value": 8
+                    },
+                    {
+                        "name": "Vertical Hard",
+                        "value": 12
+                    },
+                    {
+                        "name": "H/V Soft",
+                        "value": 5
+                    },
+                    {
+                        "name": "H/V Medium",
+                        "value": 10
+                    },
+                    {
+                        "name": "H/V Hard",
+                        "value": 15
+                    }
+                ]
+            },
+            {
                 "name": "DIP",
                 "id": 1000,
                 "type": "number_u32",

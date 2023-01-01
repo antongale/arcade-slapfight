@@ -8,7 +8,7 @@
             "shortname": "slapfight",
             "description": "Toaplan Slap Fight gateware IP Core",
             "author": "antongale",
-            "url": "https://github.com/antongale/Arcade-SlapFight_Pocket",
+            "url": "https://github.com/antongale/arcade-slapfight",
             "version": "0.1.0",
             "date_release": "2022-12-30"
         },
