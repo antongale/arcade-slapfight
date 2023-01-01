@@ -1,0 +1,25 @@
+{
+	"instance": {
+		"magic": "APF_VER_1",
+		"variant_select": {
+			"id": 777,
+			"select": false
+		},
+		"data_slots": [
+			{
+				"id": 1,
+				"filename": "tigerhb1.rom"
+			}
+		],
+		"memory_writes": [
+			{
+				"address": "0xfd000000",
+				"data": "0x00ffffff"
+			},
+			{
+				"address": "0xfe000000",
+				"data": "0x01"
+			}
+		]
+	}
+}
