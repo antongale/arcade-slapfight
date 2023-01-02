@@ -634,9 +634,8 @@ module core_top (
     //! Core RTL
     //! ------------------------------------------------------------------------------------
 
-	wire mod_other=0;
    wire [8:0] control_panel = ~{m_coin,m_start2p,m_start1p,m_shoot2,m_shoot,m_up,m_down,m_left,m_right};
-	 
+ 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!INSTANTIATE CORE RTL HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	slapfight_fpga slapcore
 	(
@@ -644,7 +643,7 @@ module core_top (
 		.clkm_36MHZ(clk_sys),
 		.clkf_cpu(clk_cpu),
 		.clkaudio(clk_aud),
-		.pcb(mod_other),
+		.pcb(MODE[0]),
 		
 		.RED(slapfight_rgb[11:8]),
 		.GREEN(slapfight_rgb[7:4]),

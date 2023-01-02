@@ -52,34 +52,34 @@ module sram
 
     always @(posedge iCLK) begin : RW_SRAM
         
-		  slice<=slice+1;
-		  if(slice==2'd0) READ_SRAM_ADDR<=ADDR[14:0];
-		  
 		  if(RST_N == 1'b1)
         begin
             SRAM_LB_N <= 1'b1;              // Mask Low Byte
             SRAM_UB_N <= 1'b1;              // Mask High Byte
             SRAM_ADDR <= {17{1'bX}};        // Set Address As "don't Care" (must Preserve Low The Bus)
             SRAM_DQ   <= {16{1'bZ}};        // Set Data Bus As High Impedance (tristate)
+				slice		 <= 0;
         end
         else
         begin
-            SRAM_ADDR <= {17{1'b0}};        // "Don't Care"
+
+				SRAM_ADDR <= {17{1'b0}};        // "Don't Care"
             SRAM_DQ   <= {16{1'bZ}};        // High Impedance
             if(RW_ACT == 1'b0)              // READ
             begin
-               S_RW_ACT  <= 1'b0;          // Tells The Fsm To Read
+					READ_SRAM_ADDR<=ADDR[14:0];	//if(slice==0) 			
+					S_RW_ACT  <= 1'b0;          // Tells The Fsm To Read
 					SRAM_ADDR <= {slice,READ_SRAM_ADDR};          // Notify The Address
-               SRAM_LB_N <= 1'b0;          // Unmask Low Byte
-               SRAM_UB_N <= 1'b1;          // Unmask High Byte
+					SRAM_LB_N <= 1'b0;          // Unmask Low Byte
+					SRAM_UB_N <= 1'b0;          // Unmask High Byte
 					case (slice)
-						2'd0:	DO_1       <= SRAM_DQ[7:0]; // Read The Data							
-						2'd1:	DO_2       <= SRAM_DQ[7:0]; // Read The Data							
-						2'd2:	DO_3       <= SRAM_DQ[7:0]; // Read The Data							
-						2'd3:	DO_4       <= SRAM_DQ[7:0]; // Read The Data							
+						2'b00:	DO_1       <= SRAM_DQ[7:0]; // Read The Data							
+						2'b01:	DO_2       <= SRAM_DQ[7:0]; // Read The Data									
+						2'b10:	DO_3       <= SRAM_DQ[7:0]; // Read The Data							
+						2'b11:	DO_4       <= SRAM_DQ[7:0]; // Read The Data							
 					endcase
- 
-            end
+					slice<=slice+1;
+				end
             else if(RW_ACT == 1'b1)         // WRITE
             begin
                 S_RW_ACT  <= 1'b1;          // Tells The Fsm To Write
@@ -88,7 +88,8 @@ module sram
                 SRAM_UB_N <= 1'b0;          // Unmask High Byte
                 SRAM_DQ   <= DI;            // Write The Data
             end
-        end
+			end
+		  
     end
 
     always @(S_RW_ACT) begin : SRAM_RW_ACTION

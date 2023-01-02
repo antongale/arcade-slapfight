@@ -24,7 +24,7 @@
 		<dip bits="8" name="Unused SW1:8" ids="OFF,ON"/>	
 		<dip bits="16" name="Unused SW2:8" ids="ON,OFF"/>
 	</switches>		
-	<rom index="0" md5="none" zip="alcon.zip|slapfighb1.zip" type="merged|nonmerged">
+	<rom index="0" md5="none" zip="alcon.zip" type="merged">
 		<part crc="9a7ac8b3" name="sf_r19jb.bin"/>
 		<part crc="18bb2f12" name="a77_01-1.8n"/>
 		<part crc="87f4705a" name="a77_02.12d"/>

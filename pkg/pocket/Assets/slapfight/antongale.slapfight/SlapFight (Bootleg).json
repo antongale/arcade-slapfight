@@ -13,11 +13,11 @@
 		],
 		"memory_writes": [
 			{
-				"address": "0xfd000000",
+				"address": "0xf1000000",
 				"data": "0x00ffffff"
 			},
 			{
-				"address": "0xfe000000",
+				"address": "0xf2000000",
 				"data": "0x00"
 			}
 		]
