@@ -247,7 +247,7 @@ m6148_7 S2_U2F (
 
 //SPRITE RAM - S2
 
-dpram_dc #(.widthad_a(12)) SP_3H //sf
+dpram_dc #(.widthad_a(12)) SP_3H //sf - reduced sprite capability by change address space by 1 bit
 (
 	.clock_a(master_clk),
 	.address_a(SPR_32K_A),
@@ -321,7 +321,7 @@ reg [14:0] SPROM_ADDR;
 
 always @(*) begin
 	SPROM_ADDR <= (pcb) ? 		 ({1'b0,SPR_EXTRA_out[6],SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX}) ://tiger heli or 16K BG ROMs - removed SPR_EXTRA_out[7]
-										 ({SPR_EXTRA_out[7:6],SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX});       //slapfight or 32K BG ROMs	
+										 ({SPR_EXTRA_out[7:6],SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX});    //slapfight or 32K BG ROMs	
 end
 
 eprom_9 SP_09

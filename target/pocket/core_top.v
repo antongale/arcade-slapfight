@@ -295,12 +295,12 @@ module core_top (
     assign dram_cas_n = 'h1;
     assign dram_we_n = 'h1;
 
-    assign sram_a = 'h0;
-    assign sram_dq = {16{1'bZ}};
-    assign sram_oe_n  = 1;
-    assign sram_we_n  = 1;
-    assign sram_ub_n  = 1;
-    assign sram_lb_n  = 1;
+    //assign sram_a = 'h0;
+    //assign sram_dq = {16{1'bZ}};
+    //assign sram_oe_n  = 1;
+    //assign sram_we_n  = 1;
+    //assign sram_ub_n  = 1;
+    //assign sram_lb_n  = 1;
 
     assign dbg_tx = 1'bZ;
     assign user1 = 1'bZ;
@@ -634,12 +634,13 @@ module core_top (
     //! Core RTL
     //! ------------------------------------------------------------------------------------
 
-	wire mod_other=1;
+	wire mod_other=0;
    wire [8:0] control_panel = ~{m_coin,m_start2p,m_start1p,m_shoot2,m_shoot,m_up,m_down,m_left,m_right};
 	 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!INSTANTIATE CORE RTL HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	slapfight_fpga slapcore
 	(
+		.ram_clk(clk_74a),
 		.clkm_36MHZ(clk_sys),
 		.clkf_cpu(clk_cpu),
 		.clkaudio(clk_aud),
@@ -664,6 +665,13 @@ module core_top (
 		.dn_addr(ioctl_addr),
 		.dn_data(ioctl_dout),
 		.dn_wr(ioctl_wr), //& rom_download
+
+		.SRAM_ADDR(sram_a), //! Address Out
+		.SRAM_DQ(sram_dq),   //! Data In/Out
+		.SRAM_OE_N(sram_oe_n), //! Output Enable
+		.SRAM_WE_N(sram_we_n), //! Write Enable
+		.SRAM_UB_N(sram_ub_n), //! Upper Byte Mask
+		.SRAM_LB_N(sram_lb_n), //! Lower Byte Mask			
 		
 		.audio_l(slapfight_snd_l),
 		.audio_r(slapfight_snd_r),

@@ -13,6 +13,7 @@
 `timescale 1ns/1ps
 
 module slapfight_fpga(
+	input ram_clk,
 	input clkm_36MHZ,
 	input	clkaudio,
 	input clkf_cpu,	
@@ -32,6 +33,14 @@ module slapfight_fpga(
 	input [24:0] dn_addr,
 	input 		 dn_wr,
 	input [7:0]  dn_data,
+	
+   output  [16:0] SRAM_ADDR, //! Address Out
+   inout   [15:0] SRAM_DQ,   //! Data In/Out
+   output         SRAM_OE_N, //! Output Enable
+   output         SRAM_WE_N, //! Write Enable
+   output         SRAM_UB_N, //! Upper Byte Mask
+   output         SRAM_LB_N, //! Lower Byte Mask	
+	
 	output [15:0] audio_l, //from jt49_1 .sound
 	output [15:0] audio_r,  //from jt49_2 .sound
 	input [15:0] hs_address,
@@ -233,6 +242,7 @@ foreground_layer slap_foreground(
 );
 
 background_layer slap_background(
+	.ram_clk(ram_clk),
 	.master_clk(clkm_36MHZ),
 	.pixel_clk(pixel_clk),
 	.pcb(pcb),
@@ -253,6 +263,12 @@ background_layer slap_background(
 	.ep6_cs_i(ep6_cs_i),
 	.ep7_cs_i(ep7_cs_i),
 	.ep8_cs_i(ep8_cs_i),
+	.SRAM_ADDR(SRAM_ADDR), //! Address Out
+	.SRAM_DQ(SRAM_DQ),   //! Data In/Out
+	.SRAM_OE_N(SRAM_OE_N), //! Output Enable
+	.SRAM_WE_N(SRAM_WE_N), //! Write Enable
+	.SRAM_UB_N(SRAM_UB_N), //! Upper Byte Mask
+	.SRAM_LB_N(SRAM_LB_N), //! Lower Byte Mask	
 	.dn_wr(dn_wr),
 	.BG_HI_out(BG_HI_out),
 	.BG_LO_out(BG_LO_out),
@@ -382,7 +398,7 @@ wire RD_BUFFER_FULL_68705,WR_BUFFER_FULL_68705;
 always @(posedge maincpuclk_6M) begin
 
  
-		rZ80A_databus_in <=	(!(SEL_ROM0A)&!Z80_RD) 						? prom_prog1_out:  //&!Z80_RD implied
+		rZ80A_databus_in <=	(!(SEL_ROM0A)&!Z80_RD) 		? prom_prog1_out:  //&!Z80_RD implied
 									(!(SEL_ROM0B)&!Z80_RD)						? prom_prog1b_out:
 									(!SEL_ROM1&!Z80_RD) 							? prom_prog2_out: //&!Z80_RD implied
 									(!Z80M_IOREQ&!Z80_RD)						? {7'b0000000,LINE_CLK2} :				//VBLANK - Tiger Heli - RD_BUFFER_FULL_68705,WR_BUFFER_FULL_68705 removed from bit 1 & 2
@@ -474,6 +490,8 @@ dpram_dc #(.widthad_a(11)) U8M_Z80M_RAM //sf
 );
 
 //Z80A CPU main program program ROM #1
+
+
 eprom_0 U8N_A77_00
 (
 	.ADDR(Z80A_addrbus[13:0]),//tiger heli rom size reduction
@@ -485,6 +503,7 @@ eprom_0 U8N_A77_00
 	.CS_DL(ep0_cs_i),
 	.WR(dn_wr)
 );
+
 
 eprom_0b U8N_A77_00b //tiger heli ROM addition
 (

@@ -1,4 +1,5 @@
 module background_layer (
+	input ram_clk,
 	input master_clk,
 	input pixel_clk,
 	input pcb,	
@@ -20,6 +21,14 @@ module background_layer (
 	input ep7_cs_i,
 	input ep8_cs_i,
 	input dn_wr,
+   
+	output  [16:0] SRAM_ADDR, //! Address Out
+   inout   [15:0] SRAM_DQ,   //! Data In/Out
+   output         SRAM_OE_N, //! Output Enable
+   output         SRAM_WE_N, //! Write Enable
+   output         SRAM_UB_N, //! Upper Byte Mask
+   output         SRAM_LB_N, //! Lower Byte Mask	
+	
 	output [7:0] BG_HI_out,
 	output [7:0] BG_LO_out,
 	output [7:0] pixel_output,
@@ -76,12 +85,38 @@ wire [7:0] U6K_BG_A77_08_out; //eprom data output
 
 
 reg [14:0] BGROM_ADDR;
+wire bgpcb=0;//pcb;
 
 always @(*) begin
-	BGROM_ADDR <= (pcb) ? 		 ({1'b0,BG_RAMD[10:0],VPIXSCRL[2:0]}) ://tiger heli or 16K BG ROMs - removed VPIXSCRL[2:0]
+	BGROM_ADDR <= (bgpcb) ? 		 ({1'b0,BG_RAMD[10:0],VPIXSCRL[2:0]}) ://tiger heli or 16K BG ROMs - removed VPIXSCRL[2:0]
 										 ({BG_RAMD[11:0],VPIXSCRL[2:0]});       //slapfight or 32K BG ROMs	
 end
 
+
+sram sram_dut
+(
+	 .iCLK      ( master_clk),
+	 .RST_N     ( 0 ),
+
+	 .RW_ACT    ( ep5_cs_i ? 1 : 0 ),
+
+	 .ADDR      ( ep5_cs_i ? dn_addr[16:0] : {2'b00,BGROM_ADDR} ),
+	 .DI        ( dn_data     ),
+	 .DO_1      ( U6P_BG_A77_05_out ),
+	 .DO_2      ( U6N_BG_A77_06_out ),
+	 .DO_3      ( U6M_BG_A77_07_out ),
+	 .DO_4      ( U6K_BG_A77_08_out ),
+	 
+	 .SRAM_ADDR ( SRAM_ADDR ),
+	 .SRAM_DQ   ( SRAM_DQ   ),
+	 .SRAM_OE_N ( SRAM_OE_N ),
+	 .SRAM_WE_N ( SRAM_WE_N ),
+	 .SRAM_UB_N ( SRAM_UB_N ),
+	 .SRAM_LB_N ( SRAM_LB_N )
+);
+
+
+/*
 eprom_5 U6P_BG_A77_05
 (
 	.ADDR(BGROM_ADDR),//BG_RAMD[11:0]
@@ -130,6 +165,7 @@ eprom_8 U6K_BG_A77_08
 	.CS_DL(ep8_cs_i),
 	.WR(dn_wr)
 );
+*/
 
 /* */
 wire U7PN_QA,U7PN_QH,U7LM_QA,U7LM_QH,U3ML_QA,U3ML_QH,U7KJ_QA,U7KJ_QH;
