@@ -18,5 +18,5 @@ set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) "
 # ==============================================================================
 # MODULES
 # ==============================================================================
-set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) "../modules/cpu-t80/T80.qip"]
+set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) "../modules/cpu-T80/T80.qip"]
 set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) "../modules/sound-jt49/jt49.qip"]
