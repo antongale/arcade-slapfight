@@ -3,7 +3,7 @@ module sprite_layer (
 	input pixel_clk,
 	input npixel_clk,
 	input pixel_clk_lb,
-	input pcb,		
+	input [7:0] pcb,		
 	input [7:0] VPIX,
 	input [11:0] HPIX,
 	input [8:0] HPIX_LT,
@@ -320,7 +320,7 @@ wire [7:0] SP_09_out,SP_10_out,SP_11_out,SP_12_out; //Sprite ROM output bytes
 reg [14:0] SPROM_ADDR;
 
 always @(*) begin
-	SPROM_ADDR <= (pcb) ? 		 ({1'b0,SPR_EXTRA_out[6],SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX}) ://tiger heli or 16K BG ROMs - removed SPR_EXTRA_out[7]
+	SPROM_ADDR <= (pcb==1) ? 	 ({1'b0,SPR_EXTRA_out[6],SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX}) ://tiger heli or 16K BG ROMs - removed SPR_EXTRA_out[7]
 										 ({SPR_EXTRA_out[7:6],SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX});    //slapfight or 32K BG ROMs	
 end
 

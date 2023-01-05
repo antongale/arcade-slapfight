@@ -1,7 +1,7 @@
 module foreground_layer (
 	input master_clk,
 	input pixel_clk,
-	input pcb,	
+	input [7:0] pcb,	
 	input [7:0] VPIX,
 	input [11:0] HPIX,
 	input SCREEN_FLIP,

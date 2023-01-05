@@ -70,36 +70,48 @@
                 "address": "0xF1000000"
             },
             {
-                "name": "Coin B",
+                "name": "Coinage",
                 "port": "DSW1",
                 "id": 2,
                 "type": "list",
                 "enabled": true,
                 "persist": true,
                 "address": "0xF1000000",
-                "defaultval": 1,
-                "mask": "0xFFFFFFFC",
+                "defaultval": 2,
+                "mask": "0xFFFFFFF8",
                 "options": [
                     {
-                        "name": "2 Coins/1 Credit",
+                        "name": "3 Coins/1 Credit",
                         "value": "0x0002"
                     },
                     {
+                        "name": "2 Coins/1 Credit",
+                        "value": "0x0004"
+                    },
+                    {
                         "name": "1 Coin/1 Credit",
-                        "value": "0x0003"
+                        "value": "0x0007"
                     },
                     {
                         "name": "2 Coins/3 Credits",
-                        "value": "0x0000"
+                        "value": "0x0003"
                     },
                     {
                         "name": "1 Coin/2 Credits",
-                        "value": "0x0001"
+                        "value": "0x0006"
+                    },
+                    {
+                        "name": "1 Coin/3 Credits",
+                        "value": "0x0005"
+                    },
+                    {
+                        "name": "Free Play",
+                        "value": "0x0000"
                     }
                 ]
             },
             {
-                "name": "Coin A",
+                "name": "Demo Sounds",
                 "port": "DSW1",
                 "id": 3,
                 "type": "list",
@@ -107,36 +119,7 @@
                 "persist": true,
                 "address": "0xF1000000",
                 "defaultval": 1,
-                "mask": "0xFFFFFFF3",
-                "options": [
-                    {
-                        "name": "2 Coins/1 Credit",
-                        "value": "0x0008"
-                    },
-                    {
-                        "name": "1 Coin/1 Credit",
-                        "value": "0x000C"
-                    },
-                    {
-                        "name": "2 Coins/3 Credits",
-                        "value": "0x0000"
-                    },
-                    {
-                        "name": "1 Coin/2 Credits",
-                        "value": "0x0004"
-                    }
-                ]
-            },
-            {
-                "name": "Demo Sounds",
-                "port": "DSW1",
-                "id": 4,
-                "type": "list",
-                "enabled": true,
-                "persist": true,
-                "address": "0xF1000000",
-                "defaultval": 1,
-                "mask": "0xFFFFFFEF",
+                "mask": "0xFFFFFFF7",
                 "options": [
                     {
                         "name": "Off",
@@ -144,12 +127,33 @@
                     },
                     {
                         "name": "On",
+                        "value": "0x0008"
+                    }
+                ]
+            },
+            {
+                "name": "Cabinet",
+                "port": "DSW1",
+                "id": 4,
+                "type": "list",
+                "enabled": true,
+                "persist": true,
+                "address": "0xF1000000",
+                "defaultval": 0,
+                "mask": "0xFFFFFFEF",
+                "options": [
+                    {
+                        "name": "Upright",
+                        "value": "0x0000"
+                    },
+                    {
+                        "name": "Cocktail",
                         "value": "0x0010"
                     }
                 ]
             },
             {
-                "name": "Screen Test",
+                "name": "Flip Screen",
                 "port": "DSW1",
                 "id": 5,
                 "type": "list",
@@ -170,7 +174,7 @@
                 ]
             },
             {
-                "name": "Flip Screen",
+                "name": "Service Mode",
                 "port": "DSW1",
                 "id": 6,
                 "type": "list",
@@ -191,51 +195,38 @@
                 ]
             },
             {
-                "name": "Cabinet",
-                "port": "DSW1",
+                "name": "Lives",
+                "port": "DSW2",
                 "id": 7,
                 "type": "list",
                 "enabled": true,
                 "persist": true,
                 "address": "0xF1000000",
-                "defaultval": 0,
-                "mask": "0xFFFFFF7F",
+                "defaultval": 2,
+                "mask": "0xFFFFFCFF",
                 "options": [
                     {
-                        "name": "Upright",
+                        "name": "1",
+                        "value": "0x0100"
+                    },
+                    {
+                        "name": "2",
                         "value": "0x0000"
                     },
                     {
-                        "name": "Cocktail",
-                        "value": "0x0080"
+                        "name": "3",
+                        "value": "0x0300"
+                    },
+                    {
+                        "name": "5",
+                        "value": "0x0200"
                     }
                 ]
             },
             {
-                "name": "Service Mode",
+                "name": "Difficulty",
                 "port": "DSW2",
                 "id": 8,
-                "type": "list",
-                "enabled": true,
-                "persist": true,
-                "address": "0xF1000000",
-                "defaultval": 0,
-                "mask": "0xFFFFFDFF",
-                "options": [
-                    {
-                        "name": "Off",
-                        "value": "0x0200"
-                    },
-                    {
-                        "name": "On",
-                        "value": "0x0000"
-                    }
-                ]
-            },
-            {
-                "name": "Lives",
-                "port": "DSW2",
-                "id": 9,
                 "type": "list",
                 "enabled": true,
                 "persist": true,
@@ -244,27 +235,27 @@
                 "mask": "0xFFFFF3FF",
                 "options": [
                     {
-                        "name": "1",
-                        "value": "0x0800"
-                    },
-                    {
-                        "name": "2",
-                        "value": "0x0000"
-                    },
-                    {
-                        "name": "3",
+                        "name": "Easy",
                         "value": "0x0C00"
                     },
                     {
-                        "name": "5",
+                        "name": "Medium",
+                        "value": "0x0800"
+                    },
+                    {
+                        "name": "Hard",
                         "value": "0x0400"
+                    },
+                    {
+                        "name": "Hardest",
+                        "value": "0x0000"
                     }
                 ]
             },
             {
                 "name": "Bonus Life",
                 "port": "DSW2",
-                "id": 10,
+                "id": 9,
                 "type": "list",
                 "enabled": true,
                 "persist": true,
@@ -273,48 +264,19 @@
                 "mask": "0xFFFFCFFF",
                 "options": [
                     {
-                        "name": "30000 100000",
+                        "name": "50k only",
                         "value": "0x3000"
                     },
                     {
-                        "name": "50000 200000",
-                        "value": "0x1000"
-                    },
-                    {
-                        "name": "50000",
+                        "name": "100k only",
                         "value": "0x2000"
                     },
                     {
-                        "name": "100000",
-                        "value": "0x0000"
-                    }
-                ]
-            },
-            {
-                "name": "Difficulty",
-                "port": "DSW2",
-                "id": 11,
-                "type": "list",
-                "enabled": true,
-                "persist": true,
-                "address": "0xF1000000",
-                "defaultval": 1,
-                "mask": "0xFFFF3FFF",
-                "options": [
-                    {
-                        "name": "Easy",
-                        "value": "0x4000"
+                        "name": "150k only",
+                        "value": "0x1000"
                     },
                     {
-                        "name": "Medium",
-                        "value": "0xC000"
-                    },
-                    {
-                        "name": "Hard",
-                        "value": "0x8000"
-                    },
-                    {
-                        "name": "Hardest",
+                        "name": "200k only",
                         "value": "0x0000"
                     }
                 ]

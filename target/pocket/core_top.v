@@ -527,13 +527,15 @@ module core_top (
     synch_3 #(.WIDTH(32)) sdsw(def_dsw, def_dsw_s, clk_sys);
     synch_3 #(.WIDTH(32)) smod(def_mod, def_mod_s, clk_sys);
     synch_3 #(.WIDTH(32)) sscl(def_scnl, def_scnl_s, clk_sys);
-
+    synch_3 #(.WIDTH(3)) res_s(MODE[2:0], vid_preset_s, clk_vid);
+	 
     wire [7:0] DSW0  = def_dsw_s[7:0];
     wire [7:0] DSW1  = def_dsw_s[15:8];
     wire [7:0] DSW2  = def_dsw_s[23:16];
     wire [7:0] MODE  = def_mod_s[7:0];
     wire       RESET = ~(reset_n && core_reset_s);
-
+	 wire [2:0] vid_preset_s;
+	 
     //! ------------------------------------------------------------------------------------
     //! Data I/O
     //! ------------------------------------------------------------------------------------
@@ -643,7 +645,7 @@ module core_top (
 		.clkm_36MHZ(clk_sys),
 		.clkf_cpu(clk_cpu),
 		.clkaudio(clk_aud),
-		.pcb(MODE[0]),
+		.pcb(MODE),
 		
 		.RED(slapfight_rgb[11:8]),
 		.GREEN(slapfight_rgb[7:4]),
@@ -710,7 +712,9 @@ module core_top (
         pocket_video_dut (
             .iPCLK     ( clk_vid       ),
             .iPCLK_90D ( clk_vid_90deg ),
-
+				
+				.iPRESET   ( vid_preset_s ),
+		  
             .iRGB      ( s_video_rgb ),
             .iVS       ( s_video_vs  ),
             .iHS       ( s_video_hs  ),

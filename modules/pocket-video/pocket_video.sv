@@ -19,6 +19,7 @@ module pocket_video
     (
         input             iPCLK,     //! Display Pixel Clock
         input             iPCLK_90D, //! Display Pixel Clock 90º Phase Shift
+        input       [2:0] iPRESET,   //! Video preset scaling configurations (up to 8)
 
         input      [23:0] iRGB,      //! Core: RGB Video
         input             iVS,       //! Core: Vsync
@@ -44,7 +45,7 @@ module pocket_video
 
     always @(posedge iPCLK) begin
         oDE <= 0;
-        oRGB <= 24'h0;
+        oRGB <= {8'b0, iPRESET, 13'b0};
         if (rDE) begin
             oDE <= 1;
             oRGB <= rRGB;

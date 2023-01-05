@@ -17,7 +17,7 @@ module slapfight_fpga(
 	input clkm_36MHZ,
 	input	clkaudio,
 	input clkf_cpu,	
-	input pcb,	
+	input [7:0] pcb,	
 	output [3:0] RED,     	//from fpga core to sv
 	output [3:0] GREEN,		//from fpga core to sv
 	output [3:0] BLUE,		//from fpga core to sv
@@ -80,7 +80,7 @@ ROM15 U8B_ROM15(
 wire U9E_cout;
 wire U8E_cout;
 
-always @(posedge V_SCRL_SEL) VSCRL_sum_in<=(pcb) ? ({Z80A_databus_out[7:4],!IO2_SF,!IO2_SF,!IO2_SF,!IO2_SF}) : Z80A_databus_out; //AY1_IOB_in[7:5]
+always @(posedge V_SCRL_SEL) VSCRL_sum_in<=(pcb==1) ? ({Z80A_databus_out[7:4],!IO2_SF,!IO2_SF,!IO2_SF,!IO2_SF}) : Z80A_databus_out; //AY1_IOB_in[7:5]
 always @(posedge H_SYNC) LINE_CLK2<=ROM15_out[1];
 
 //(pcb) ? 0 : 
@@ -135,7 +135,7 @@ wire [3:0] U1J_sum,U2J_sum,U1H_sum;
 wire U1J_cout,U2J_cout,U1H_cout,CPU_RAM_SYNC,CPU_RAM_LBUF;
 reg IO2_SF;
 
-always @(posedge RESET_n) IO2_SF<=(pcb) ? DIP1[5] : DIP1[6];	
+always @(posedge RESET_n) IO2_SF<=(pcb==1|pcb==2) ? DIP1[5] : DIP1[6];	
 
 always @(posedge H_SCRL_LO_SEL) begin 
 	HSCRL[7:0]<=Z80A_databus_out;		//U3J
@@ -417,7 +417,7 @@ assign Z80A_databus_in = rZ80A_databus_in;
 
 wire FG_WAIT,BG_WAIT;
 
-wire wait_n = !pause&AU_WAIT&((FG_WAIT&BG_WAIT)|pcb); //FG&BG wait when in 'Tiger Heli' mode
+wire wait_n = !pause&AU_WAIT&((FG_WAIT&BG_WAIT)|(pcb==1)); //FG&BG wait when in 'Tiger Heli' mode
 
 wire SEL_EXT,SEL_ROM1,SEL_ROM0B,SEL_ROM0A;
 wire AU_RDY;
@@ -793,7 +793,7 @@ wire nRST_AU=!AU_ENABLE|AU_INT_ON|!RESET_n;
 always @(posedge AUD_INT_CLK or negedge RESET_n) AU_INT_ON<=(!RESET_n) ? 1'b1 : 1'b0; //Initialize audio interrupt
 always @(posedge aucpuclk_3M or posedge nRST_AU) U7A_TMR_out <= (nRST_AU) ? 0 : U7A_TMR_out+1;
 
-always @(*) AUDIO_CPU_NMI<= (pcb) ? !U7A_TMR_out[12] : !U7A_TMR_out[13]; //change interrupt timing for Tiger Heli board 
+always @(*) AUDIO_CPU_NMI<= (pcb==1) ? !U7A_TMR_out[12] : !U7A_TMR_out[13]; //change interrupt timing for Tiger Heli board 
 
 //  **** FINAL 12-BIT ANALOGUE OUTPUT ******
 //  PRIORTY: FOREGROUND->SPRITES->BACKGROUND
