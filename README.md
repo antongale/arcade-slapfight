@@ -1,4 +1,4 @@
-# SLAP FIGHT / ALCON
+<h1># SLAP FIGHT / ALCON</H1>
 FPGA core for the Analogue Pocket platform developed by Anton Gale.
 
 A big thank you to Boogermann for providing a template and tools to help build this core.
@@ -7,13 +7,28 @@ Thank you to the following members of the community: Boogermann, misterretrowolf
 
 Slap Fight was developed by Toaplan and released by Taito in 1986. Slap Fight was known as ALCON (Alien League Of Cosmic Nations)
 
-Game Instructions:
+<h2>Compatible Platforms</h2>
+<li>Analogue Pocket</li>
+
+<h2>Compatible Games</h2>
+<blockquote>
+<p dir="auto"><strong>ROMs NOT INCLUDED:</strong> By using this core you agree to provide your own roms.</p>
+</blockquote>
+
+<li>Slap Fight</li>
+<li>Tiger Heli</li>
+<li>Get Star</li>
+
+<h2>Partially Working</h2>
+<li>Performan</li>
+
+<h2>Game Instructions:</h2>
 
 	The year is 2059.  Aliens have overrun the planet.  The Allied League of Cosmic Nations, commonly called ALCON, have convened to combat this menace to the world.  ALCON has determined that a sole, experienced pilot, flying the experimental SW475 aircraft, must defend the world against certain destruction.
 
 	YOU are the pilot that must fly the SW475 aircraft and defeat the aliens.
 
-Maneuvers:
+<h2>Maneuvers:</h2>
 
 	Use the joystick to fly the SW475 over the terrain.
 	Use 'Fire' button to shoot at enemies.
@@ -21,7 +36,7 @@ Maneuvers:
 	The 'Weapon's Gauge' on the bottom of the screen shows which weapons can be used (the wording on the weapons turn yellow).
 	Pick up starts to advance 'Weapon's Gauge'
 
-Weapons available on the SW475:
+<h2>Weapons available on the SW475:</h2>
 
 	SPEED  - This will increase you flying speed
 	SHOT   - Normal forward fire
@@ -32,7 +47,7 @@ Weapons available on the SW475:
 	H. MIS - Homing missiles
 	SHIELD - Indestructible against three hits
 
-DIP Switch Settings:
+<h2>DIP Switch Settings:</h2>
 
 	Cabinet Type       - Up-Right* ,Table
 	Screen			   - Normal*, Invert
