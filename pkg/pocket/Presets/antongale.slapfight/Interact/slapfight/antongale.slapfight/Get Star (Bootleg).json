@@ -11,6 +11,58 @@
                 "value": 1
             },
             {
+                "name": "Scanlines",
+                "id": 100,
+                "type": "list",
+                "enabled": true,
+                "persist": true,
+                "address": "0xF3000000",
+                "mask": "0xFFFFFFF0",
+                "defaultval": 0,
+                "options": [
+                    {
+                        "name": "Disabled",
+                        "value": 0
+                    },
+                    {
+                        "name": "Horizontal Soft",
+                        "value": 1
+                    },
+                    {
+                        "name": "Horizontal Medium",
+                        "value": 2
+                    },
+                    {
+                        "name": "Horizontal Hard",
+                        "value": 3
+                    },
+                    {
+                        "name": "Vertical Soft",
+                        "value": 4
+                    },
+                    {
+                        "name": "Vertical Medium",
+                        "value": 8
+                    },
+                    {
+                        "name": "Vertical Hard",
+                        "value": 12
+                    },
+                    {
+                        "name": "H/V Soft",
+                        "value": 5
+                    },
+                    {
+                        "name": "H/V Medium",
+                        "value": 10
+                    },
+                    {
+                        "name": "H/V Hard",
+                        "value": 15
+                    }
+                ]
+            },
+            {
                 "name": "DIP",
                 "id": 1000,
                 "type": "number_u32",
@@ -101,7 +153,7 @@
                 ]
             },
             {
-                "name": "Intermissions",
+                "name": "Flip Screen",
                 "port": "DSW1",
                 "id": 5,
                 "type": "list",
@@ -208,72 +260,24 @@
                 "enabled": true,
                 "persist": true,
                 "address": "0xF1000000",
-                "defaultval": 4,
-                "mask": "0xFFFF0FFF",
+                "defaultval": 0,
+                "mask": "0xFFFFCFFF",
                 "options": [
                     {
-                        "name": "20k, 120k, then every 100k",
-                        "value": "0xB000"
-                    },
-                    {
-                        "name": "40k, 120k, then every 100k",
-                        "value": "0xA000"
-                    },
-                    {
-                        "name": "60k, 160k, then every 100k",
-                        "value": "0x9000"
-                    },
-                    {
-                        "name": "Every 100k",
-                        "value": "0x8000"
-                    },
-                    {
-                        "name": "20k, 220k, then every 200k",
-                        "value": "0x7000"
-                    },
-                    {
-                        "name": "40k, 240k, then every 200k",
-                        "value": "0x6000"
-                    },
-                    {
-                        "name": "60k, 260k, then every 200k",
-                        "value": "0x5000"
-                    },
-                    {
-                        "name": "Every 200k",
-                        "value": "0x4000"
-                    },
-                    {
-                        "name": "20k, 320k, then every 300k",
+                        "name": "50k only",
                         "value": "0x3000"
                     },
                     {
-                        "name": "40k, 340k, then every 300k",
+                        "name": "100k only",
                         "value": "0x2000"
                     },
                     {
-                        "name": "60k, 360k, then every 300k",
+                        "name": "150k only",
                         "value": "0x1000"
                     },
                     {
-                        "name": "Every 300k",
+                        "name": "200k only",
                         "value": "0x0000"
-                    },
-                    {
-                        "name": "20k only",
-                        "value": "0xF000"
-                    },
-                    {
-                        "name": "40k only",
-                        "value": "0xE000"
-                    },
-                    {
-                        "name": "60k only",
-                        "value": "0xD000"
-                    },
-                    {
-                        "name": "None",
-                        "value": "0xC000"
                     }
                 ]
             }

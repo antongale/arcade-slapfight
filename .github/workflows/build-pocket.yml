@@ -25,8 +25,8 @@ jobs:
   synthesis:
     runs-on: ubuntu-latest
     env:
-      CORE: performan
-      DISPLAY_NAME: "Performan by Toaplan"
+      CORE: slapfight
+      DISPLAY_NAME: "Slap Fight by Toaplan"
       CATEGORY: arcade
       AUTHOR: antongale
       TARGET: pocket

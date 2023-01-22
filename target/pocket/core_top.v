@@ -527,14 +527,14 @@ module core_top (
     synch_3 #(.WIDTH(32)) sdsw(def_dsw, def_dsw_s, clk_sys);
     synch_3 #(.WIDTH(32)) smod(def_mod, def_mod_s, clk_sys);
     synch_3 #(.WIDTH(32)) sscl(def_scnl, def_scnl_s, clk_sys);
-    //synch_3 #(.WIDTH(3)) res_s(MODE[2:0], vid_preset_s, clk_vid);
+    synch_3 #(.WIDTH(3)) res_s(MODE[2:0], vid_preset_s, clk_vid);
 	 
     wire [7:0] DSW0  = def_dsw_s[7:0];
     wire [7:0] DSW1  = def_dsw_s[15:8];
     wire [7:0] DSW2  = def_dsw_s[23:16];
-    //wire [7:0] MODE  = 4;
+    wire [7:0] MODE  = def_mod_s[7:0];
     wire       RESET = ~(reset_n && core_reset_s);
-	 //wire [2:0] vid_preset_s;
+	 wire [2:0] vid_preset_s;
 	 
     //! ------------------------------------------------------------------------------------
     //! Data I/O
@@ -639,12 +639,13 @@ module core_top (
    wire [8:0] control_panel = ~{m_coin,m_start2p,m_start1p,m_shoot2,m_shoot,m_up,m_down,m_left,m_right};
  
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!INSTANTIATE CORE RTL HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	performan_fpga perfcore
+	slapfight_fpga slapcore
 	(
-		.clkm_master(clk_sys),
+		.ram_clk(clk_74a),
+		.clkm_36MHZ(clk_sys),
 		.clkf_cpu(clk_cpu),
 		.clkaudio(clk_aud),
-		.clkfpgaaudio(clk_sys),
+		.pcb(MODE),
 		
 		.RED(slapfight_rgb[11:8]),
 		.GREEN(slapfight_rgb[7:4]),
@@ -666,12 +667,12 @@ module core_top (
 		.dn_data(ioctl_dout),
 		.dn_wr(ioctl_wr), //& rom_download
 
-//		.SRAM_ADDR(sram_a), //! Address Out
-//		.SRAM_DQ(sram_dq),   //! Data In/Out
-//		.SRAM_OE_N(sram_oe_n), //! Output Enable
-//		.SRAM_WE_N(sram_we_n), //! Write Enable
-//		.SRAM_UB_N(sram_ub_n), //! Upper Byte Mask
-//		.SRAM_LB_N(sram_lb_n), //! Lower Byte Mask			
+		.SRAM_ADDR(sram_a), //! Address Out
+		.SRAM_DQ(sram_dq),   //! Data In/Out
+		.SRAM_OE_N(sram_oe_n), //! Output Enable
+		.SRAM_WE_N(sram_we_n), //! Write Enable
+		.SRAM_UB_N(sram_ub_n), //! Upper Byte Mask
+		.SRAM_LB_N(sram_lb_n), //! Lower Byte Mask			
 		
 		.audio_l(slapfight_snd_l),
 		.audio_r(slapfight_snd_r),
@@ -712,7 +713,7 @@ module core_top (
             .iPCLK     ( clk_vid       ),
             .iPCLK_90D ( clk_vid_90deg ),
 				
-				//.iPRESET   ( vid_preset_s ),
+				.iPRESET   ( vid_preset_s ),
 		  
             .iRGB      ( s_video_rgb ),
             .iVS       ( s_video_vs  ),
@@ -750,22 +751,22 @@ module core_top (
     //! ------------------------------------------------------------------------------------
     //! Clocks
     //! ------------------------------------------------------------------------------------
-    wire clk_sys;        //! Core: 32.000Mhz
-    wire clk_cpu;        //! CPU:  	8.000Mhz
-    wire clk_aud;        //! Audio: 2.000Mhz
-    wire clk_vid;        //! Video: 5.333Mhz
-    wire clk_vid_90deg;  //! Video: 5.333Mhz @ 90deg Phase Shift
+    wire clk_sys;        //! Core: 36.000Mhz
+    wire clk_cpu;        //! CPU:  12.000Mhz
+    wire clk_aud;        //! Audio: 3.000Mhz
+    wire clk_vid;        //! Video: 6.000Mhz
+    wire clk_vid_90deg;  //! Video: 6.000Mhz @ 90deg Phase Shift
     wire pll_core_locked;
 
     mf_pllbase pll (
             .refclk   ( clk_74a ),
             .rst      ( 0 ),
 
-            .outclk_0 ( clk_sys         ), 	//32
-            .outclk_1 ( clk_cpu         ),	//8
-            .outclk_2 ( clk_aud         ),	//4
-            .outclk_3 ( clk_vid         ),	//5.3333
-            .outclk_4 ( clk_vid_90deg   ),	//5.3333
+            .outclk_0 ( clk_sys         ),
+            .outclk_1 ( clk_cpu         ),
+            .outclk_2 ( clk_aud         ),
+            .outclk_3 ( clk_vid         ),
+            .outclk_4 ( clk_vid_90deg   ),
             .locked   ( pll_core_locked )
         );
     //! @end

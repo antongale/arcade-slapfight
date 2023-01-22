@@ -1,11 +1,12 @@
-//Sprite Layer Renderer - With additional sprite priority support
 module sprite_layer (
 	input master_clk,
 	input pixel_clk,
 	input npixel_clk,
 	input pixel_clk_lb,
+	input [7:0] pcb,		
 	input [7:0] VPIX,
 	input [11:0] HPIX,
+	input [8:0] HPIX_LT,
 	input SCREEN_FLIP,
 	input SPRITE_RAM,
 	input Z80_WR,
@@ -13,7 +14,6 @@ module sprite_layer (
 	input CPU_RAM_SYNC,
 	input CPU_RAM_SELECT,
 	input CPU_RAM_LBUF,
-	input IO_C_SPRITE_COLOUR,
 	input [15:0] CPU_ADDR,
 	input  [7:0] CPU_DIN,
 
@@ -23,9 +23,6 @@ module sprite_layer (
 	input ep10_cs_i,
 	input ep11_cs_i,
 	input ep12_cs_i,
-	input	spreg1_cs_i, 
-	input	spreg2_cs_i, 
-	input	spseq_cs_i,	
 	input dn_wr,
 
 	output [7:0] SP_RAMD_out,
@@ -50,27 +47,13 @@ wire nCPU_RAM_SYNC=!CPU_RAM_SYNC;
 //*********START: chip selects **************
 //rom address should get set to zero when CPU_RAM_SYNC
 always @(posedge pixel_clk or negedge nCPU_RAM_SYNC) 	ROM18_addr <= (!nCPU_RAM_SYNC) ? 8'd0 :
-																		(!RESET_LD_CTR) ? 8'b00000100 : ROM18_addr+1; 
-
-																		
-reg [8:0] HPIX_LT;
-always @(posedge pixel_clk) begin 
-	HPIX_LT <= HPIX[8:0];  //this is a 'de-scrambled' version of HPIX_PT - U2D
-end
+																		(!RESET_LD_CTR) ? 8'b00000100 : ROM18_addr+1; //S2_U4B & S2_U2C - is there a clear?
 
 wire [7:0] ROM18_out;
-
-spseq_rom S2_U2B_ROM18
-(
-	.ADDR(ROM18_addr[4:0]),
-	.CLK(master_clk),
-	.DATA(ROM18_out),
-
-	.ADDR_DL(dn_addr),
-	.CLK_DL(master_clk),
-	.DATA_IN(dn_data),
-	.CS_DL(spseq_cs_i),
-	.WR(dn_wr)
+ROM18 S2_U2B_ROM18(
+    .clk(master_clk),
+    .addr(ROM18_addr[4:0]),
+    .data(ROM18_out)
 );
 
 wire [3:0] S2_U2A_rout;
@@ -115,30 +98,16 @@ always @(posedge npixel_clk or posedge SPR_ROM_ADDR_RST) SPR_ROM1617_ADDR <= (SP
 wire [7:0] ROM17_out;
 wire [7:0] ROM16_out;
 
-spreg1_rom S2_U1E_ROM16
-(
-	.ADDR(SPR_ROM1617_ADDR),
-	.CLK(master_clk),
-	.DATA(ROM16_out),
-
-	.ADDR_DL(dn_addr),
-	.CLK_DL(master_clk),
-	.DATA_IN(dn_data),
-	.CS_DL(spreg1_cs_i),
-	.WR(dn_wr)
+ROM17 S2_U1C_ROM17(
+    .clk(master_clk),
+    .addr(SPR_ROM1617_ADDR),
+    .data(ROM17_out)
 );
 
-spreg2_rom S2_U1C_ROM17
-(
-	.ADDR(SPR_ROM1617_ADDR),
-	.CLK(master_clk),
-	.DATA(ROM17_out),
-
-	.ADDR_DL(dn_addr),
-	.CLK_DL(master_clk),
-	.DATA_IN(dn_data),
-	.CS_DL(spreg2_cs_i),
-	.WR(dn_wr)
+ROM16 S2_U1E_ROM16(
+    .clk(master_clk),
+    .addr(SPR_ROM1617_ADDR),
+    .data(ROM16_out)
 );
 
 reg [5:0] S2_U1F_out;
@@ -178,19 +147,25 @@ dpram_dc #(.widthad_a(11)) SP_U2L //sf
 	.q_b(SP_RAMD_out)
 
 );
-
 //START: SPRITE REGISTERS
 reg [7:0] SPR_VPOS_D;
 reg [7:0] SPR_EXT_D;
-reg [9:0] SPR_IDX_D;
-reg [8:0] SPR_HPOS_D;
-wire [3:0] SPR_VPIX;
-//END: SPRITE REGISTERS
 
-always @(posedge SPR_LAT_VPOS) SPR_VPOS_D      <= SPRITE_RAM_D;	//S2_U1H
-always @(posedge SPR_LAT_INDX) SPR_IDX_D[7:0]  <= SPRITE_RAM_D;	//S2_U1J
-always @(posedge SPR_LAT_HPOS) SPR_HPOS_D[7:0] <= SPRITE_RAM_D;	//S2_U1L 
-always @(posedge SPR_LAT_XDAT) SPR_EXT_D       <=SPRITE_RAM_D;//S2_U1K
+reg [9:0] SPR_IDX_D;
+//reg [3:0] SPR_COL_D;
+reg [8:0] SPR_HPOS_D;
+
+wire [3:0] SPR_VPIX;
+
+always @(posedge SPR_LAT_VPOS) SPR_VPOS_D <= SPRITE_RAM_D;	//S2_U1H
+always @(posedge SPR_LAT_INDX) SPR_IDX_D[7:0] <= SPRITE_RAM_D;	//S2_U1J
+always @(posedge SPR_LAT_HPOS) SPR_HPOS_D[7:0] <= SPRITE_RAM_D;	//S2_U1L
+always @(posedge SPR_LAT_XDAT) begin //S2_U1K
+	SPR_HPOS_D[8]	<=SPRITE_RAM_D[0];
+	SPR_IDX_D[9:8]	<=SPRITE_RAM_D[7:6];
+	SPR_EXT_D      <=SPRITE_RAM_D;
+end
+//END: SPRITE REGISTERS
 
 //START: VPIX & SPR_32K ADDRESS GENERATION
 wire S2_U7B_AQ=!S2_U1G_10&S2_U1G_9; //S2_U7B LS74
@@ -200,9 +175,10 @@ reg [7:0] SPR_VPOS_CNT;
 
 //S2_U7B_A
 wire S2_U7BA_Q;
-wire S2_U7BA_nQ;
+wire S2_U7BA_nQ;// = !S2_U7BA_Q;
 
-ls74 S2_U7B 
+
+ls74 S2_U7B //not used
 (
 	.n_pre1(S2_U1G_10), 
 	.n_clr1(S2_U1G_9), 
@@ -244,7 +220,7 @@ wire SPR32_BUF_WR = 	S2_U4C_C&S2_U4A_6;
 reg [3:0] SPR_32K_HI;
 always @(posedge S2_U5A_A) SPR_32K_HI <= (!SPR32_BUF_WR) ? S2_U4F_sum : S2_U2F_out;
 
-assign SPR_32K_A[7:0] = (CPU_RAM_SYNC) ? SPR_VPOS_CNT : VPIX-1; //VPIX-1 hack
+assign SPR_32K_A[7:0] = (CPU_RAM_SYNC) ? SPR_VPOS_CNT : VPIX-1;
 assign SPR_32K_A[11:8] = SPR_32K_HI;
 
 ttl_74283 #(.WIDTH(4), .DELAY_RISE(0), .DELAY_FALL(0)) U9E(
@@ -271,7 +247,7 @@ m6148_7 S2_U2F (
 
 //SPRITE RAM - S2
 
-dpram_dc #(.widthad_a(12)) SP_3H //sf
+dpram_dc #(.widthad_a(12)) SP_3H //sf - reduced sprite capability by change address space by 1 bit
 (
 	.clock_a(master_clk),
 	.address_a(SPR_32K_A),
@@ -283,9 +259,10 @@ dpram_dc #(.widthad_a(12)) SP_3H //sf
 	.address_b(SPR_32K_A),
 	.data_b(),
 	.wren_b(1'b0),
-	.q_b() 
+	.q_b() //this goes to the ROM address
 
 );
+
 
 dpram_dc #(.widthad_a(12)) SP_3J //sf
 (
@@ -303,6 +280,7 @@ dpram_dc #(.widthad_a(12)) SP_3J //sf
 
 );
 
+
 dpram_dc #(.widthad_a(12)) SP_3K //sf
 (
 	.clock_a(master_clk),
@@ -318,6 +296,7 @@ dpram_dc #(.widthad_a(12)) SP_3K //sf
 	.q_b()
 
 );
+
 
 dpram_dc #(.widthad_a(12)) SP_3L //sf
 (
@@ -337,9 +316,13 @@ dpram_dc #(.widthad_a(12)) SP_3L //sf
 
 
 wire [7:0] SP_09_out,SP_10_out,SP_11_out,SP_12_out; //Sprite ROM output bytes
-reg [12:0] SPROM_ADDR ;
 
-always @(*) SPROM_ADDR <= {2'b00,SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX}; //performan or 8K BG ROMs 
+reg [14:0] SPROM_ADDR;
+
+always @(*) begin
+	SPROM_ADDR <= (pcb==1) ? 	 ({1'b0,SPR_EXTRA_out[6],SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX}) ://tiger heli or 16K BG ROMs - removed SPR_EXTRA_out[7]
+										 ({SPR_EXTRA_out[7:6],SPR_IDX_out,SPR_VPIX_out[3:0],SPR_8HPIX});    //slapfight or 32K BG ROMs	
+end
 
 eprom_9 SP_09
 (
@@ -378,6 +361,18 @@ eprom_11 SP_11
 	.WR(dn_wr)
 );
 
+eprom_12 SP_12
+(
+	.ADDR(SPROM_ADDR),//
+	.CLK(master_clk),//
+	.DATA(SP_12_out),//
+	.ADDR_DL(dn_addr),
+	.CLK_DL(!master_clk),//
+	.DATA_IN(dn_data),
+	.CS_DL(ep12_cs_i),
+	.WR(dn_wr)
+);
+
 wire SPR_PIX_A,SPR_PIX_B,SPR_PIX_C,SPR_PIX_D;
 
 ls166 S2_U7G(
@@ -401,15 +396,22 @@ ls166 S2_U9G(
 	.QH(SPR_PIX_C)
 );
 
+ls166 S2_U9K(
+	.clk(pixel_clk),
+	.pin(SP_12_out),
+	.PE(SPR_ROM_LD),
+	.QH(SPR_PIX_D)
+);
 
 
-reg [7:0] LINEBUF_A_D_in;
+
+wire [7:0] LINEBUF_A_D_in;
 wire [7:0] LINEBUF_A_D_out;
-reg [7:0] LINEBUF_B_D_in;
+wire [7:0] LINEBUF_B_D_in;
 wire [7:0] LINEBUF_B_D_out;
 
 
-//****************** SPRITE LINE BUFFER *************
+//Line buffer - check A9 on SlapFight board is grounded
 reg  [8:0] LNBF_CNT;
 wire [8:0] LNBF_CNTnext;
 wire [8:0] LINEBUF_A_A;
@@ -428,20 +430,21 @@ ls74 S2_U9D
 	
 );
 
-reg [4:0] SP_PX_SEL_D;
+reg [3:0] SP_PX_SEL_D;
 wire SPR_LINEA_PIX_A = SPR_PIX_A&SPR_LINEA;
 wire SPR_LINEA_PIX_B = SPR_PIX_B&SPR_LINEA;
 wire SPR_LINEA_PIX_C = SPR_PIX_C&SPR_LINEA;
-
+wire SPR_LINEA_PIX_D = SPR_PIX_D&SPR_LINEA;
 wire SPR_LINEB_PIX_A = SPR_PIX_A&SPR_LINEB;
 wire SPR_LINEB_PIX_B = SPR_PIX_B&SPR_LINEB;
 wire SPR_LINEB_PIX_C = SPR_PIX_C&SPR_LINEB;
+wire SPR_LINEB_PIX_D = SPR_PIX_D&SPR_LINEB;
 
 reg [7:0] SP_PX_D;
 
 wire S2_U5A_D=SPR_LB_LD&S2_U4A_11;
 
-always @(posedge pixel_clk) LNBF_CNT <= (!SPR_LB_LD) ? ({1'b0,SPR_HPOS_out}) : 
+always @(posedge pixel_clk) LNBF_CNT <= (!SPR_LB_LD) ? ({SPR_EXTRA_out[0],SPR_HPOS_out}) : 
 													 (!S2_U5A_D) ? LNBF_CNT-1 : LNBF_CNT; //S2_U1M,U2M & U3M
 
 assign LINEBUF_A_A = (CPU_RAM_LBUF) ? 9'd0 :
@@ -450,31 +453,27 @@ assign LINEBUF_A_A = (CPU_RAM_LBUF) ? 9'd0 :
 assign LINEBUF_B_A = (CPU_RAM_LBUF) ? 9'd0 :
 							  (!SPR_LINEB) ? HPIX_LT : LNBF_CNT; //S2_U2T, U4T
 							  
-//SPR_EXTRA_OUT[7]  = SPRITE PRIORITY
-//IO_C_SPRITE_COLOR = USED WHEN IN 'POWER' MODE TO SHIFT COLOURS TO UPPER HALF OF PALLET
-always @(posedge SPR_ROM_LD) SP_PX_SEL_D <= {SPR_EXTRA_out[7],IO_C_SPRITE_COLOUR,SPR_EXTRA_out[0],SPR_EXTRA_out[2:1]};
-		
-always @(*) begin
-	LINEBUF_A_D_in<={SP_PX_SEL_D[4:0],SPR_LINEA_PIX_B,SPR_LINEA_PIX_C,SPR_LINEA_PIX_A}; //S2_U7P
-	LINEBUF_B_D_in<={SP_PX_SEL_D[4:0],SPR_LINEB_PIX_B,SPR_LINEB_PIX_C,SPR_LINEB_PIX_A}; //S2_U8P
-end
-	
-	
-//assign SP_PRI=SPRITE_PRIORITY;
+always @(posedge SPR_ROM_LD) SP_PX_SEL_D <= SPR_EXTRA_out[4:1]; //S2_U5L
+
+assign LINEBUF_A_D_in={SPR_LINEA_PIX_D,SPR_LINEA_PIX_B,SPR_LINEA_PIX_C,SPR_LINEA_PIX_A,SP_PX_SEL_D}; //S2_U7P
+assign LINEBUF_B_D_in={SPR_LINEB_PIX_D,SPR_LINEB_PIX_B,SPR_LINEB_PIX_C,SPR_LINEB_PIX_A,SP_PX_SEL_D}; //S2_U8P
+
 wire S2_U7M_B=!(SPR_LINEA_PIX_B|SPR_LINEA_PIX_C);
-wire S2_U7M_A=!(SPR_LINEA_PIX_A);
+wire S2_U7M_A=!(SPR_LINEA_PIX_A|SPR_LINEA_PIX_D);
 wire S2_U8M_A=!(S2_U7M_A&S2_U7M_B);
 wire S2_U1R_A=!(S2_U8M_A&SPR_LINEA&S2_U4A_10);
 wire S2_U1T_D=S2_U1R_A&SPR_LINEA;
 wire LINEBUF_A_nWE=pixel_clk|S2_U1T_D;
 
 wire S2_U7M_D=!(SPR_LINEB_PIX_B|SPR_LINEB_PIX_C);
-wire S2_U7M_C=!(SPR_LINEB_PIX_A);
+wire S2_U7M_C=!(SPR_LINEB_PIX_A|SPR_LINEB_PIX_D);
 wire S2_U8M_C=!(S2_U7M_C&S2_U7M_D);
 wire S2_U1R_B=!(S2_U8M_C&SPR_LINEB&S2_U4A_10);
 wire S2_U1T_C=S2_U1R_B&SPR_LINEB;
 wire LINEBUF_B_nWE=pixel_clk|S2_U1T_C;
 
+
+//(SPR_LINEA_PIX_C|SPR_LINEA_PIX_B|SPR_LINEA_PIX_D|SPR_LINEA_PIX_A)
 
 m6148x2 S2_U5T (
 	.data(LINEBUF_A_D_in),
@@ -496,8 +495,8 @@ reg [7:0] LINEA_PIXEL;
 reg [7:0] LINEB_PIXEL;
 
 always @(posedge pixel_clk_lb) begin
-	LINEA_PIXEL <= (LINEBUF_A_D_out[7:0]);  //put in enables here based off of 'LINEBUF_A_nWE'
-	LINEB_PIXEL <= (LINEBUF_B_D_out[7:0]);
+	LINEA_PIXEL <= ({LINEBUF_A_D_out[3:0],LINEBUF_A_D_out[7:4]});  //put in enables here based off of 'LINEBUF_A_nWE'
+	LINEB_PIXEL <= ({LINEBUF_B_D_out[3:0],LINEBUF_B_D_out[7:4]});
 end
 
 reg [7:0] pixel_blank;
@@ -508,6 +507,7 @@ always @(posedge pixel_clk) begin
 end
 wire clear_pixel=pixel_blank[7];
 
+//wire [7:0] pix_out2;
 always @(posedge pixel_clk) SP_PX_D = (!SPR_LINEA) ?  LINEA_PIXEL : LINEB_PIXEL;
 //assign pix_out2=(!clear_pixel) ? 8'b00000000 : SP_PX_D;
 assign pixel_output=SP_PX_D;

@@ -3,12 +3,12 @@
         "magic": "APF_VER_1",
         "metadata": {
             "platform_ids": [
-                "performan"
+                "slapfight"
             ],
-            "shortname": "performan",
-            "description": "Toaplan Performan gateware IP Core",
+            "shortname": "slapfight",
+            "description": "Toaplan Slap Fight gateware IP Core",
             "author": "antongale",
-            "url": "https://github.com/antongale/arcade-performan",
+            "url": "https://github.com/antongale/arcade-slapfight",
             "version": "<%- VERSION %>",
             "date_release": "<%- RELEASE_DATE %>"
         },
