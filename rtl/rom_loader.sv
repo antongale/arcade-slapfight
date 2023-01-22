@@ -23,10 +23,10 @@
 //
 //============================================================================
 
-// Rom layout for SlapFight:
-// 0x00000 - 0x07FFF = eprom_1 - Main CPU Program
-// 0x08000 - 0x0FFFF = eprom_2 - Main CPU Program
-// 0x10000 - 0x11FFF = eprom_9 - Audio CPU Program
+// Rom layout for Performan:
+// 0x00000 - 0x03FFF = eprom_0A - Main CPU Program
+// 0x04000 - 0x07FFF = eprom_0B - Main CPU Program
+// 0x10000 - 0x11FFF = eprom_2 - Audio CPU Program
 // 0x12000 - 0x13FFF = eprom_3 - Foreground - Chars
 // 0x14000 - 0x15FFF = eprom_4 - Foreground - Chars
 // 0x16000 - 0x1DFFF = eprom_5 - Background - Tiles
@@ -34,35 +34,40 @@
 // 0x26000 - 0x2DFFF = eprom_7 - Background - Tiles
 // 0x2E000 - 0x35FFF = eprom_8 - Background - Tiles
 
+
 module selector
-	(
-		input logic [24:0] ioctl_addr,
-		output logic ep0_cs, ep0b_cs, ep1_cs, ep2_cs, ep3_cs, ep4_cs, ep5_cs, ep6_cs, ep7_cs, ep8_cs, ep9_cs, ep10_cs, ep11_cs, ep12_cs, ep13_cs, ep_dummy_cs, cp1_cs, cp2_cs, cp3_cs
-	);
+(
+	input logic [24:0] ioctl_addr,
+	output logic ep0_cs, ep0b_cs, ep2_cs, ep3_cs, ep4_cs, ep5_cs, ep6_cs, ep7_cs, ep9_cs, ep10_cs, ep11_cs, ep13_cs,ep_dummy_cs,cp1_cs,cp2_cs,cp3_cs,hs_cs,vs_cs,spreg1_cs,spreg2_cs,spseq_cs
+);
 
 	always_comb begin
-		{ep0_cs, ep0b_cs, ep1_cs, ep2_cs, ep3_cs, ep4_cs, ep5_cs, ep6_cs, ep7_cs, ep8_cs, ep9_cs, ep10_cs, ep11_cs, ep12_cs, ep13_cs,ep_dummy_cs,cp1_cs,cp2_cs,cp3_cs} = 0;
-		if     (ioctl_addr < 'h04000) ep0_cs = 1; // 0x4000 13   - Main CPU
-		else if(ioctl_addr < 'h08000) ep0b_cs = 1;// 0x4000 13   - Main CPU
-		else if(ioctl_addr < 'h10000) ep1_cs = 1; // 0x8000 14   - Main CPU
-		else if(ioctl_addr < 'h12000) ep2_cs = 1; // 0x2000 14	- Audio CPU Program
-		else if(ioctl_addr < 'h14000) ep3_cs = 1; // 0x2000 12   - Foreground - Chars
-		else if(ioctl_addr < 'h16000) ep4_cs = 1; // 0x2000 12   - Foreground - Chars
+					{ep0_cs, ep0b_cs, ep2_cs, ep3_cs, ep4_cs, ep5_cs, ep6_cs, ep7_cs, ep9_cs, ep10_cs, ep11_cs, ep13_cs,ep_dummy_cs,cp1_cs,cp2_cs,cp3_cs,hs_cs,vs_cs,spreg1_cs,spreg2_cs,spseq_cs} = 0;
+
+
+		if     (ioctl_addr < 'h04000) ep0_cs = 1; 		// 0x4000 13   - Main CPU
+		else if(ioctl_addr < 'h08000) ep0b_cs = 1;		// 0x4000 13   - Main CPU
+		else if(ioctl_addr < 'h0A000) ep2_cs = 1; 		// 0x2000 14	- Audio CPU Program
+		else if(ioctl_addr < 'h0C000) ep3_cs = 1; 		// 0x2000 12   - Foreground - Chars
+		else if(ioctl_addr < 'h0E000) ep4_cs = 1; 		// 0x2000 12   - Foreground - Chars
+		else if(ioctl_addr < 'h10000) ep_dummy_cs = 1; 	// 0x2000 12   - Foreground - Chars
+		else if(ioctl_addr < 'h12000) ep5_cs = 1; 		// 0x8000 14   - Background - Tiles
+		else if(ioctl_addr < 'h14000) ep6_cs = 1; 		// 0x8000 14	- Background - Tiles
+		else if(ioctl_addr < 'h16000) ep7_cs = 1; 		// 0x8000 14	- Background - Tiles
+		else if(ioctl_addr < 'h18000) ep9_cs = 1;			// 0x8000 14	- Sprites
+		else if(ioctl_addr < 'h1A000) ep10_cs = 1; 		// 0x8000 14	- Sprites
+		else if(ioctl_addr < 'h1C000) ep11_cs = 1; 		// 0x8000 14	- Sprites
+		else if(ioctl_addr < 'h1C100) cp1_cs = 1; 		// 0x8000 14	- Colour Prom #1
+		else if(ioctl_addr < 'h1C200) cp2_cs = 1; 		// 0x8000 14	- Colour Prom #2
+		else if(ioctl_addr < 'h1C300) cp3_cs = 1; 		// 0x8000 14	- Colour Prom #3
+		else if(ioctl_addr < 'h1C400) hs_cs = 1; 			// 0x8000 14	- Colour Prom #3
+		else if(ioctl_addr < 'h1C500) vs_cs = 1; 			// 0x8000 14	- Colour Prom #3
+		else if(ioctl_addr < 'h1C600) spreg1_cs = 1; 	// 0x00100 8	- Sprite Register Prom #1
+		else if(ioctl_addr < 'h1C700) spreg2_cs = 1; 	// 0x00100 8	- Sprite Register Prom #2
+		else if(ioctl_addr < 'h1C720) spseq_cs = 1; 		// 0x00020 5	- Sprite Sequencer Prom #3
 		
-		else if(ioctl_addr < 'h18000) ep_dummy_cs = 1; // 0x2000 12   - Foreground - Chars
-		
-		else if(ioctl_addr < 'h38000) ep5_cs = 1; // 0x8000 14   - Background - Tiles
-//		else if(ioctl_addr < 'h28000) ep6_cs = 1; // 0x8000 14	- Background - Tiles
-//		else if(ioctl_addr < 'h30000) ep7_cs = 1; // 0x8000 14	- Background - Tiles
-//		else if(ioctl_addr < 'h38000) ep8_cs = 1; // 0x8000 14	- Background - Tiles
-		else if(ioctl_addr < 'h40000) ep9_cs = 1; // 0x8000 14	- Sprites
-		else if(ioctl_addr < 'h48000) ep10_cs = 1; // 0x8000 14	- Sprites
-		else if(ioctl_addr < 'h50000) ep11_cs = 1; // 0x8000 14	- Sprites
-		else if(ioctl_addr < 'h58000) ep12_cs = 1; // 0x8000 14	- Sprites
-		else if(ioctl_addr < 'h58100) cp1_cs = 1; // 0x8000 14	- Colour Prom #1
-		else if(ioctl_addr < 'h58200) cp2_cs = 1; // 0x8000 14	- Colour Prom #2
-		else if(ioctl_addr < 'h58300) cp3_cs = 1; // 0x8000 14	- Colour Prom #3
 		else ep13_cs = 1; // 0x8000 14	- Background - Tiles
+
 	end
 endmodule
 
@@ -70,8 +75,6 @@ endmodule
 // EPROMS //
 ////////////
 
-
-			
 module eprom_0 //program
 (
 	input logic        CLK,
@@ -123,31 +126,6 @@ module eprom_0b //program
 	);
 endmodule
 
-module eprom_1  //program
-(
-	input logic        CLK,
-	input logic        CLK_DL,
-	input logic        CEN,	
-	input logic [14:0] ADDR,
-	input logic [24:0] ADDR_DL,
-	input logic [7:0]  DATA_IN,
-	input logic        CS_DL,
-	input logic        WR,
-	output logic [7:0] DATA
-);
-	
-	dpram_dc #(.widthad_a(15)) eprom_1
-	(
-		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
-		.q_a(DATA),
-		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
-		.data_b(DATA_IN),
-		.wren_b(WR & CS_DL)
-	);
-endmodule
-
 module eprom_2 //audio program
 (
 	input logic        CLK,
@@ -172,7 +150,7 @@ module eprom_2 //audio program
 	);
 endmodule
 
-module eprom_3 //chars
+module eprom_3
 (
 	input logic        CLK,
 	input logic        CLK_DL,
@@ -220,7 +198,7 @@ module eprom_4
 	);
 endmodule
 
-module eprom_dummy //mcu
+module eprom_dummy
 (
 	input logic        CLK,
 	input logic        CLK_DL,
@@ -248,21 +226,21 @@ module eprom_5
 (
 	input logic        CLK,
 	input logic        CLK_DL,
-	input logic [14:0] ADDR,
+	input logic [12:0] ADDR,
 	input logic [24:0] ADDR_DL,
 	input logic [7:0]  DATA_IN,
 	input logic        CS_DL,
 	input logic        WR,
 	output logic [7:0] DATA
 );
-	dpram_dc #(.widthad_a(15)) eprom_5  //made 1 bit smaller for testing
+	dpram_dc #(.widthad_a(13)) eprom_5
 	(
 		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
+		.address_a(ADDR[12:0]),
 		.q_a(DATA[7:0]),
 
 		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
+		.address_b(ADDR_DL[12:0]),
 		.data_b(DATA_IN),
 		.wren_b(WR & CS_DL)
 	);
@@ -273,21 +251,21 @@ module eprom_6
 (
 	input logic        CLK,
 	input logic        CLK_DL,
-	input logic [14:0] ADDR,
+	input logic [12:0] ADDR,
 	input logic [24:0] ADDR_DL,
 	input logic [7:0]  DATA_IN,
 	input logic        CS_DL,
 	input logic        WR,
 	output logic [7:0] DATA
 );
-	dpram_dc #(.widthad_a(15)) eprom_6
+	dpram_dc #(.widthad_a(13)) eprom_6
 	(
 		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
+		.address_a(ADDR[12:0]),
 		.q_a(DATA[7:0]),
 
 		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
+		.address_b(ADDR_DL[12:0]),
 		.data_b(DATA_IN),
 		.wren_b(WR & CS_DL)
 	);
@@ -299,70 +277,46 @@ module eprom_7
 (
 	input logic        CLK,
 	input logic        CLK_DL,
-	input logic [14:0] ADDR,
+	input logic [12:0] ADDR,
 	input logic [24:0] ADDR_DL,
 	input logic [7:0]  DATA_IN,
 	input logic        CS_DL,
 	input logic        WR,
 	output logic [7:0] DATA
 );
-	dpram_dc #(.widthad_a(15)) eprom_7
+	dpram_dc #(.widthad_a(13)) eprom_7
 	(
 		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
+		.address_a(ADDR[12:0]),
 		.q_a(DATA[7:0]),
 
 		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
+		.address_b(ADDR_DL[12:0]),
 		.data_b(DATA_IN),
 		.wren_b(WR & CS_DL)
 	);
 endmodule
 
-
-module eprom_8
-(
-	input logic        CLK,
-	input logic        CLK_DL,
-	input logic [14:0] ADDR,
-	input logic [24:0] ADDR_DL,
-	input logic [7:0]  DATA_IN,
-	input logic        CS_DL,
-	input logic        WR,
-	output logic [7:0] DATA
-);
-	dpram_dc #(.widthad_a(15)) eprom_8
-	(
-		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
-		.q_a(DATA[7:0]),
-
-		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
-		.data_b(DATA_IN),
-		.wren_b(WR & CS_DL)
-	);
-endmodule
 
 module eprom_9
 (
 	input logic        CLK,
 	input logic        CLK_DL,
-	input logic [14:0] ADDR,
+	input logic [12:0] ADDR,
 	input logic [24:0] ADDR_DL,
 	input logic [7:0]  DATA_IN,
 	input logic        CS_DL,
 	input logic        WR,
 	output logic [7:0] DATA
 );
-	dpram_dc #(.widthad_a(15)) eprom_9
+	dpram_dc #(.widthad_a(13)) eprom_9
 	(
 		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
+		.address_a(ADDR[12:0]),
 		.q_a(DATA[7:0]),
 
 		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
+		.address_b(ADDR_DL[12:0]),
 		.data_b(DATA_IN),
 		.wren_b(WR & CS_DL)
 	);
@@ -372,21 +326,21 @@ module eprom_10
 (
 	input logic        CLK,
 	input logic        CLK_DL,
-	input logic [14:0] ADDR,
+	input logic [12:0] ADDR,
 	input logic [24:0] ADDR_DL,
 	input logic [7:0]  DATA_IN,
 	input logic        CS_DL,
 	input logic        WR,
 	output logic [7:0] DATA
 );
-	dpram_dc #(.widthad_a(15)) eprom_10
+	dpram_dc #(.widthad_a(13)) eprom_10
 	(
 		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
+		.address_a(ADDR[12:0]),
 		.q_a(DATA[7:0]),
 
 		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
+		.address_b(ADDR_DL[12:0]),
 		.data_b(DATA_IN),
 		.wren_b(WR & CS_DL)
 	);
@@ -396,49 +350,27 @@ module eprom_11
 (
 	input logic        CLK,
 	input logic        CLK_DL,
-	input logic [14:0] ADDR,
+	input logic [12:0] ADDR,
 	input logic [24:0] ADDR_DL,
 	input logic [7:0]  DATA_IN,
 	input logic        CS_DL,
 	input logic        WR,
 	output logic [7:0] DATA
 );
-	dpram_dc #(.widthad_a(15)) eprom_11
+	dpram_dc #(.widthad_a(13)) eprom_11
 	(
 		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
+		.address_a(ADDR[12:0]),
 		.q_a(DATA[7:0]),
 
 		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
+		.address_b(ADDR_DL[12:0]),
 		.data_b(DATA_IN),
 		.wren_b(WR & CS_DL)
 	);
 endmodule
 
-module eprom_12
-(
-	input logic        CLK,
-	input logic        CLK_DL,
-	input logic [14:0] ADDR,
-	input logic [24:0] ADDR_DL,
-	input logic [7:0]  DATA_IN,
-	input logic        CS_DL,
-	input logic        WR,
-	output logic [7:0] DATA
-);
-	dpram_dc #(.widthad_a(15)) eprom_12
-	(
-		.clock_a(CLK),
-		.address_a(ADDR[14:0]),
-		.q_a(DATA[7:0]),
 
-		.clock_b(CLK_DL),
-		.address_b(ADDR_DL[14:0]),
-		.data_b(DATA_IN),
-		.wren_b(WR & CS_DL)
-	);
-endmodule
 
 ///////////
 // PROMS //
@@ -511,6 +443,79 @@ module cprom_3
 
 		.clock_b(CLK_DL),
 		.address_b(ADDR_DL[7:0]),
+		.data_b(DATA_IN),
+		.wren_b(WR & CS_DL)
+	);
+endmodule
+
+
+module spreg1_rom
+(
+	input logic        CLK,
+	input logic        CLK_DL,
+	input logic [7:0]  ADDR,
+	input logic [24:0] ADDR_DL,
+	input logic [7:0]  DATA_IN,
+	input logic        CS_DL,
+	input logic        WR,
+	output logic [3:0] DATA
+);
+	dpram_dc #(.widthad_a(8)) spreg1_rom
+	(
+		.clock_a(CLK),
+		.address_a(ADDR),
+		.q_a(DATA[3:0]),
+
+		.clock_b(CLK_DL),
+		.address_b(ADDR_DL[7:0]),
+		.data_b(DATA_IN),
+		.wren_b(WR & CS_DL)
+	);
+endmodule
+
+module spreg2_rom
+(
+	input logic        CLK,
+	input logic        CLK_DL,
+	input logic [7:0]  ADDR,
+	input logic [24:0] ADDR_DL,
+	input logic [7:0]  DATA_IN,
+	input logic        CS_DL,
+	input logic        WR,
+	output logic [3:0] DATA
+);
+	dpram_dc #(.widthad_a(8)) spreg2_rom
+	(
+		.clock_a(CLK),
+		.address_a(ADDR),
+		.q_a(DATA[3:0]),
+
+		.clock_b(CLK_DL),
+		.address_b(ADDR_DL[7:0]),
+		.data_b(DATA_IN),
+		.wren_b(WR & CS_DL)
+	);
+endmodule
+
+module spseq_rom
+(
+	input logic        CLK,
+	input logic        CLK_DL,
+	input logic [4:0]  ADDR,
+	input logic [24:0] ADDR_DL,
+	input logic [7:0]  DATA_IN,
+	input logic        CS_DL,
+	input logic        WR,
+	output logic [7:0] DATA
+);
+	dpram_dc #(.widthad_a(5)) spseq_rom
+	(
+		.clock_a(CLK),
+		.address_a(ADDR),
+		.q_a(DATA[7:0]),
+
+		.clock_b(CLK_DL),
+		.address_b(ADDR_DL[4:0]),
 		.data_b(DATA_IN),
 		.wren_b(WR & CS_DL)
 	);

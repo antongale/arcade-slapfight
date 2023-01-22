@@ -1,22 +1,22 @@
 {
-    "name": "slapfight",
-    "displayName": "slapfight",
-    "description": "Toaplan Slap Fight gateware IP Core",
+    "name": "performan",
+    "displayName": "performan",
+    "description": "Toaplan Performan gateware IP Core",
     "author": "antongale",
     "version": "0.1.0",
     "license": "GPL-3.0-or-later",
-    "repository": "https://github.com/antongale/Arcade-SlapFight_Pocket",
+    "repository": "https://github.com/antongale/Arcade-Performan_Pocket",
     "keywords": [
         "ecosystem:gateman"
     ],
     "scripts": {
         "verilator": "echo \"Error: no simulation specified\" && exit 1",
-        "build:pocket": "quartus_sh --flow compile projects/slapfight_pocket.qpf",
-        "program:pocket": "quartus_pgm -m jtag -c 1 -o \"p;projects/output_files/slapfight_pocket.sof@1\""
+        "build:pocket": "quartus_sh --flow compile projects/pweforman_pocket.qpf",
+        "program:pocket": "quartus_pgm -m jtag -c 1 -o \"p;projects/output_files/performan_pocket.sof@1\""
     },
     "hardware": {
-        "id": "slap-fight",
-        "name": "Slap Fight",
+        "id": "performan",
+        "name": "Performan",
         "year": 1986,
         "manufacturer": "Toaplan"
     },

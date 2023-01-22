@@ -1,8 +1,7 @@
+//Background layer renderer
 module background_layer (
-	input ram_clk,
 	input master_clk,
 	input pixel_clk,
-	input [7:0] pcb,	
 	input [7:0] VPIX,	
 	input [7:0] VPIXSCRL,
 	input [8:0] HPIXSCRL,
@@ -19,24 +18,16 @@ module background_layer (
 	input ep5_cs_i,
 	input ep6_cs_i,
 	input ep7_cs_i,
-	input ep8_cs_i,
 	input dn_wr,
-   
-	output  [16:0] SRAM_ADDR, //! Address Out
-   inout   [15:0] SRAM_DQ,   //! Data In/Out
-   output         SRAM_OE_N, //! Output Enable
-   output         SRAM_WE_N, //! Write Enable
-   output         SRAM_UB_N, //! Upper Byte Mask
-   output         SRAM_LB_N, //! Lower Byte Mask	
-	
 	output [7:0] BG_HI_out,
 	output [7:0] BG_LO_out,
-	output [7:0] pixel_output,
-	output BG_WAIT
+	output [7:0] pixel_output
+	//output BG_WAIT
 );
 
 wire [15:0] BG_RAMD;
 reg [7:0] BG_PX_D;
+reg [7:0] BG_PX_D_pf;
 	
 	wire SH_REG_DIR=!SCREEN_FLIP;
 	wire BG_CLK=(SCREEN_FLIP^!HPIXSCRL[2]);
@@ -45,12 +36,15 @@ reg [7:0] BG_PX_D;
 	wire BG_SELECT=BG_SYNC|CPU_RAM_SYNC;
 	wire BG_S0=!(BG_SELECT& SCREEN_FLIP);
 	wire BG_S1=!(BG_SELECT&!SCREEN_FLIP);
-	
 
-dpram_dc #(.widthad_a(11)) BG_U4N //sf
+reg [10:0] BG_RAM_ADDR;
+
+always @(*) BG_RAM_ADDR={VPIXSCRL[7:3],HPIXSCRL[8:3]};
+
+dpram_dc #(.widthad_a(11)) BG_U4N //BACKGROUND RAM #1
 (
 	.clock_a(master_clk),
-	.address_a({VPIXSCRL[7:3],HPIXSCRL[8:3]}), //
+	.address_a(BG_RAM_ADDR), 		
 	.data_a(CPU_DIN),
 	.wren_a(1'b0),
 	.q_a(BG_RAMD[7:0]),
@@ -63,10 +57,10 @@ dpram_dc #(.widthad_a(11)) BG_U4N //sf
 
 );
 
-dpram_dc #(.widthad_a(11)) BG_U4P //sf
+dpram_dc #(.widthad_a(11)) BG_U4P //BACKGROUND RAM #2
 (
 	.clock_a(master_clk),
-	.address_a({VPIXSCRL[7:3],HPIXSCRL[8:3]}), //{VPIXSCRL[7:3],HPIXSCRL[8:3]}
+	.address_a(BG_RAM_ADDR), 
 	.data_a(CPU_DIN),
 	.wren_a(1'b0),
 	.q_a(BG_RAMD[15:8]),
@@ -78,43 +72,51 @@ dpram_dc #(.widthad_a(11)) BG_U4P //sf
 	.q_b(BG_HI_out)
 );
 
+//eprom data output
 wire [7:0] U6P_BG_A77_05_out;
 wire [7:0] U6N_BG_A77_06_out;
 wire [7:0] U6M_BG_A77_07_out;
-wire [7:0] U6K_BG_A77_08_out; //eprom data output
+
+reg [12:0] BGROM_ADDR;
+
+always @(*) BGROM_ADDR <= {BG_RAMD[9:0],VPIXSCRL[2:0]}; //performan or 8K BG ROMs - removed VPIXSCRL[2:0]
 
 
-reg [14:0] BGROM_ADDR;
-
-always @(*) begin
-	BGROM_ADDR <= (pcb==1) ? 	 	({1'b0,BG_RAMD[10:0],VPIXSCRL[2:0]}) ://tiger heli or 16K BG ROMs - removed VPIXSCRL[2:0]
-										({BG_RAMD[11:0],VPIXSCRL[2:0]});       //slapfight or 32K BG ROMs	
-end
-
-reg tg_clk; //clock toggle (clk/2)
-always @(posedge master_clk) tg_clk=~tg_clk;
-
-//128K of SRAM
-sram sram_dut
+eprom_5 U6P_BG_A77_05 //BACKROUND ROM #1
 (
-	 .iCLK      ( ep5_cs_i ? master_clk : tg_clk),
-	 .RST_N     ( 0 ),
+	.ADDR(BGROM_ADDR),
+	.CLK(master_clk),
+	.DATA(U6P_BG_A77_05_out),
+	.ADDR_DL(dn_addr),
+	.CLK_DL(!master_clk),
+	.DATA_IN(dn_data),
+	.CS_DL(ep5_cs_i),
+	.WR(dn_wr)
+);
 
-	 .RW_ACT    ( ep5_cs_i ? 1 : 0 ),
 
-	 .ADDR      ( ep5_cs_i ? dn_addr[16:0] : {2'b00,BGROM_ADDR} ),
-	 .DI        ( dn_data     ),
-	 .DO_1      ( U6P_BG_A77_05_out ),
-	 .DO_2      ( U6N_BG_A77_06_out ),
-	 .DO_3      ( U6M_BG_A77_07_out ),
-	 .DO_4      ( U6K_BG_A77_08_out ),
-	 
-	 .SRAM_ADDR ( SRAM_ADDR ),
-	 .SRAM_DQ   ( SRAM_DQ   ),
-	 .SRAM_OE_N ( SRAM_OE_N ),
-	 .SRAM_WE_N ( SRAM_WE_N ),
-	 .SRAM_UB_N ( SRAM_UB_N ),
-	 .SRAM_LB_N ( SRAM_LB_N )
+eprom_6 U6N_BG_A77_06 //BACKROUND ROM #2
+(
+	.ADDR(BGROM_ADDR),
+	.CLK(master_clk),
+	.DATA(U6N_BG_A77_06_out),
+	.ADDR_DL(dn_addr),
+	.CLK_DL(!master_clk),
+	.DATA_IN(dn_data),
+	.CS_DL(ep6_cs_i),
+	.WR(dn_wr)
+);
+
+eprom_7 U6M_BG_A77_07 //BACKROUND ROM #3
+(
+	.ADDR(BGROM_ADDR),
+	.CLK(master_clk),
+	.DATA(U6M_BG_A77_07_out),
+	.ADDR_DL(dn_addr),
+	.CLK_DL(!master_clk),
+	.DATA_IN(dn_data),
+	.CS_DL(ep7_cs_i),
+	.WR(dn_wr)
 );
 
 wire U7PN_QA,U7PN_QH,U7LM_QA,U7LM_QH,U3ML_QA,U3ML_QH,U7KJ_QA,U7KJ_QH;
@@ -145,26 +147,13 @@ wire U7PN_QA,U7PN_QH,U7LM_QA,U7LM_QH,U3ML_QA,U3ML_QH,U7KJ_QA,U7KJ_QH;
 		.QA(U3ML_QA),
 		.QH(U3ML_QH)
 	);
-
-	ls299 U7KJ (
-		.clk(pixel_clk),
-		.pin(U6K_BG_A77_08_out),
-		.S0(BG_S0),
-		.S1(BG_S1),
-		.QA(U7KJ_QA),
-		.QH(U7KJ_QH)
-	);
 	
-	always @(*) begin 
-		BG_PX_D[3:0] <= (SH_REG_DIR) ? {U7KJ_QH,U3ML_QH,U7LM_QH,U7PN_QH} : {U7KJ_QA,U3ML_QA,U7LM_QA,U7PN_QA} ;
-	end
-	
-	always @(posedge BG_COLOUR_COPY) BG_PX_D[7:4]<=BG_RAMD[15:12];//pause_cnt;//BG_RAMD[15:12];
-
+	always @(*) BG_PX_D[2:0] <= (SH_REG_DIR) ? {U3ML_QH,U7LM_QH,U7PN_QH} : {U3ML_QA,U7LM_QA,U7PN_QA} ;		
+	always @(posedge BG_COLOUR_COPY) BG_PX_D[7:3]<={1'b0,BG_RAMD[14:11]};
 	assign pixel_output=BG_PX_D;
 
 	//background wait states
-	wire BG_CHIP_SEL=BACKGRAM_1&BACKGRAM_2;
+/*	wire BG_CHIP_SEL=BACKGRAM_1&BACKGRAM_2;
 	reg [7:0] count_wait;
 	wire nBG_CLK=!BG_CLK; 
 	reg BG_CS_OLD;
@@ -175,6 +164,6 @@ wire U7PN_QA,U7PN_QH,U7LM_QA,U7LM_QH,U3ML_QA,U3ML_QH,U7KJ_QA,U7KJ_QH;
 		BG_CS_OLD=BG_CHIP_SEL;
 	end
 
- 	assign BG_WAIT=BG_CHIP_SEL|BG_WAIT_out;
+ 	assign BG_WAIT=BG_CHIP_SEL|BG_WAIT_out;*/
 
 endmodule

@@ -5,7 +5,7 @@ Developer(s)
 Release
     1985
 
-This Implementation of a compatible Slap Fight/Tiger Heli arcade hardware in HDL is the work of Anton Gale
+This Implementation of a compatible Performan arcade hardware in HDL is the work of Anton Gale
 
 All trademarks, logos, and copyrights are property of their respective owners.
 

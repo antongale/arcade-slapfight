@@ -8,17 +8,17 @@
 		"data_slots": [
 			{
 				"id": 1,
-				"filename": "getstrb1.rom"
+				"filename": "perfrman.rom"
 			}
 		],
 		"memory_writes": [
 			{
-				"address": "0xf1000000",
-				"data": "0x000000ff"
+				"address": "0xfd000000",
+				"data": "0x00ffffff"
 			},
 			{
-				"address": "0xf2000000",
-				"data": "0x02"
+				"address": "0xfe000000",
+				"data": "0x04"
 			}
 		]
 	}
