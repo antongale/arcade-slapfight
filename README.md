@@ -19,9 +19,6 @@ Slap Fight was developed by Toaplan and released by Taito in 1986. Slap Fight wa
 <li>Tiger Heli</li>
 <li>Get Star</li>
 
-<h2>Partially Working</h2>
-<li>Performan</li>
-
 <h2>Game Instructions:</h2>
 
 	The year is 2059.  Aliens have overrun the planet.  The Allied League of Cosmic Nations, commonly called ALCON, have convened to combat this menace to the world.  ALCON has determined that a sole, experienced pilot, flying the experimental SW475 aircraft, must defend the world against certain destruction.
