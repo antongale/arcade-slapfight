@@ -623,8 +623,8 @@ module core_top (
     //! ------------------------------------------------------------------------------------
     //! A/V Signals
     //! ------------------------------------------------------------------------------------
-    wire [15:0] slapfight_snd_l; //! Audio L
-    wire [15:0] slapfight_snd_r; //! Audio R
+    wire signed [15:0] slapfight_snd_l; //! Audio L
+    wire signed [15:0] slapfight_snd_r; //! Audio R
     //! ------------------------------------------------------------------------------------
     wire        slapfight_hs, slapfight_vs;                    //! Sync H/V
     wire        slapfight_hb, slapfight_vb;                    //! Blank H/V
@@ -734,14 +734,14 @@ module core_top (
     //! ------------------------------------------------------------------------------------
     sound_i2s #
         (
-            .CHANNEL_WIDTH( 15 ),
-            .SIGNED_INPUT (  0 )
+            .CHANNEL_WIDTH( 16 ),
+            .SIGNED_INPUT (  1 )
         )
         sound_i2s (
             .clk_74a    ( clk_74a ),
-            .clk_audio  ( clk_sys ),
-            .audio_l    ( slapfight_snd_l[15:1] ),
-            .audio_r    ( slapfight_snd_r[15:1] ),
+            .clk_audio  ( clk_aud ),
+            .audio_l    ( slapfight_snd_l[15:0] ),
+            .audio_r    ( slapfight_snd_r[15:0] ),
 
             .audio_mclk ( audio_mclk ),
             .audio_dac  ( audio_dac  ),
@@ -753,7 +753,7 @@ module core_top (
     //! ------------------------------------------------------------------------------------
     wire clk_sys;        //! Core: 36.000Mhz
     wire clk_cpu;        //! CPU:  12.000Mhz
-    wire clk_aud;        //! Audio: 3.000Mhz
+    wire clk_aud;        //! Audio:48.000Mhz
     wire clk_vid;        //! Video: 6.000Mhz
     wire clk_vid_90deg;  //! Video: 6.000Mhz @ 90deg Phase Shift
     wire pll_core_locked;

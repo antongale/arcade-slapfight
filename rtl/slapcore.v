@@ -41,13 +41,34 @@ module slapfight_fpga(
    output         SRAM_UB_N, //! Upper Byte Mask
    output         SRAM_LB_N, //! Lower Byte Mask	
 	
-	output [15:0] audio_l, //from jt49_1 .sound
-	output [15:0] audio_r,  //from jt49_2 .sound
+	output signed [15:0] audio_l, //from jt49_1 .sound
+	output signed [15:0] audio_r,  //from jt49_2 .sound
 	input [15:0] hs_address,
 	output [7:0] hs_data_out,
 	input [7:0] hs_data_in,
 	input hs_write
 );
+
+//SLAPFIGHT - AUDIO CLOCKS
+reg clkm_24MHZ, clkm_12MHZ, clkm_3MHZ, clkm_1p5MHZ,clkm_6MHZ;
+reg clkb_3MHZ,clkb_6MHZ;
+
+//core clock generation logic based on jtframe code
+reg [4:0] cencnt =5'd0;
+
+always @(posedge clkaudio) begin
+	cencnt  <= cencnt+5'd1;
+end
+
+always @(posedge clkaudio) begin //48
+	clkm_24MHZ	  	<= cencnt[0]   == 1'd0;
+	clkm_12MHZ		<= cencnt[1:0] == 2'd0;
+	clkm_6MHZ		<= cencnt[2:0] == 3'd0;
+	clkb_6MHZ		<= cencnt[2:0] == 3'd4;	
+   clkm_3MHZ		<= cencnt[3:0] == 4'd0;
+   clkb_3MHZ		<= cencnt[3:0] == 4'd8;	
+   clkm_1p5MHZ		<= cencnt[4:0] == 5'd0;		
+end
 
 //SLAPFIGHT PIXEL REGISTERS & COUNTERS
 reg [7:0] VPIX,VSCRL_sum_in;
@@ -379,9 +400,9 @@ T80pa Z80A(
 	.INT_n(Z80M_INT), //
 	.BUSRQ_n(PUR),
 	.NMI_n(PUR),
-	.CLK(clkf_cpu), ////clkf_cpu
-	.CEN_p(1), //maincpuclk_6M
-	.CEN_n(1), //!maincpuclk_6M
+	.CLK(clkaudio), ////clkf_cpu
+	.CEN_p(clkm_6MHZ), //maincpuclk_6M
+	.CEN_n(clkb_6MHZ), //!maincpuclk_6M
 	.MREQ_n(Z80_MREQ),
 	.IORQ_n(Z80M_IOREQ),
 	.DI(Z80A_databus_in),
@@ -571,18 +592,11 @@ ttl_7474 #(.BLOCKS(1), .DELAY_RISE(0), .DELAY_FALL(0)) U7A_B(
 
 wire [9:0] pre_sndl;
 wire [9:0] pre_sndr;
-wire [7:0] ay12F_araw, ay12F_braw, ay12F_craw;
-wire [7:0] ay12V_araw, ay12V_braw, ay12V_craw;
 wire signed [15:0] ay12F_adcrm, ay12F_bdcrm, ay12F_cdcrm;
 wire signed [15:0] ay12V_adcrm, ay12V_bdcrm, ay12V_cdcrm;
 wire AY12F_sample,AY12V_sample;
 wire [9:0] sound_outF;
 wire [9:0] sound_outV;
-
-//always @(posedge clkm_36MHZ) begin
-assign	audio_l = ({1'd0, sound_outF, 5'd0});
-assign	audio_r = ({1'd0, sound_outV, 5'd0});
-//end
 
 // *************** SECOND CPU IC SELECTION LOGIC FOR AUDIO *****************
 //always @(posedge aucpuclk_3M) begin
@@ -595,6 +609,9 @@ assign AUD_in =					(!AU_ROM_CS&!AURD) ? S2_U12D_AU_A77_02_out :
 										8'b00000000;
 //end
 
+
+
+
 //Second Z80 CPU responsible for audio
 T80pa Z80B(
 	.RESET_n(AU_ENABLE),
@@ -602,9 +619,9 @@ T80pa Z80B(
 	.INT_n(PUR),
 	.BUSRQ_n(AUDIO_CPU_PORT),
 	.NMI_n(AUDIO_CPU_NMI),
-	.CLK(maincpuclk_6M), //maincpuclk_6M
-	.CEN_p(1), //aucpuclk_3M
-	.CEN_n(1), //!aucpuclk_3M
+	.CLK(clkaudio), //maincpuclk_6M
+	.CEN_p(clkm_3MHZ), //aucpuclk_3M
+	.CEN_n(clkb_3MHZ), //!aucpuclk_3M
 	.MREQ_n(AUIMREQ),
 	.DI(AUD_in),
 	.DO(AUD_out),
@@ -614,6 +631,7 @@ T80pa Z80B(
 	.BUSAK_n(AUDIO_CPU_BUSACK)
 );
 
+	 
 wire [7:0] AUDIO_RAM_out;
 wire [7:0] AUDIO_RAMM_out;
 
@@ -672,22 +690,24 @@ always @(*) begin
 	AY2_IOB_in<=({1'b1,m_coin,m_start2p,m_start1p,2'b11,m_shoot,m_shoot2});
 end
 
+wire signed [15:0] audio_snd;
+
 jt49_bus AY_1_S2_U11G(
     .rst_n(AU_ENABLE),
-    .clk(clkaudio),    				// signal on positive edge 
-    .clk_en(1),  						/* synthesis direct_enable = 1 */
+    .clk(clkaudio),    						// signal on positive edge 
+    .clk_en(clkm_1p5MHZ),  				/* synthesis direct_enable = 1 */
     
     .bdir(AY_1_BDIR),						// bus control pins of original chip
     .bc1(AY_1_BC1),
 	 //.bc2(AY_1_BC2),
 	 .din(AUD_out),
-    .sel(1'b0), 								// if sel is low, the clock is divided by 2
+    .sel(1'b1), 								// if sel is low, the clock is divided by 2
     .dout(AY_1_databus_out),
     
 	 .sound(sound_outF),  					// combined channel output
-    .A(ay12F_araw),    						// linearised channel output
-    .B(ay12F_braw),
-    .C(ay12F_craw),
+    .A(),    									// linearised channel output
+    .B(),
+    .C(),
     .sample(AY12F_sample),
 
     .IOA_in(AY1_IOA_in),					//Dip Switch #1 - DIP1
@@ -696,26 +716,38 @@ jt49_bus AY_1_S2_U11G(
 
 jt49_bus AY_2_S2_11J(
     .rst_n(AU_ENABLE),
-    .clk(clkaudio),    				// signal on positive edge
-    .clk_en(1),  						/* synthesis direct_enable = 1 */
+    .clk(clkaudio),    						// signal on positive edge
+    .clk_en(clkm_1p5MHZ),  				/* synthesis direct_enable = 1 */
     
     .bdir(AY_2_BDIR),	 					// bus control pins of original chip
     .bc1(AY_2_BC1),
 	 //.bc2(AY_2_BC2),
 	 .din(AUD_out),
-    .sel(1'b0), 								// if sel is low, the clock is divided by 2
+    .sel(1'b1), 								// if sel is low, the clock is divided by 2
     .dout(AY_2_databus_out),
     
 	 .sound(sound_outV),  					// combined channel output
-    .A(ay12V_araw),      					// linearised channel output
-    .B(ay12V_braw),
-    .C(ay12V_craw),
+    .A(),      								// linearised channel output
+    .B(),
+    .C(),
     .sample(AY12V_sample),
 
     .IOA_in(AY2_IOA_in),					//Control Inputs #1
     .IOB_in(AY2_IOB_in)						//Control Inputs #2
 
 );
+
+jtframe_jt49_filters u_filters1(
+            .rst    ( 1'b0    ),
+            .clk    ( clkaudio     ),
+            .din0   ( sound_outF ),
+            .din1   ( sound_outV ), 
+            .sample ( AY12F_sample ),
+            .dout   ( audio_snd    )
+);
+
+assign audio_l = (pause) ? 16'd0 : audio_snd;
+assign audio_r = (pause) ? 16'd0 : audio_snd;
 
 wire [3:0] U6_7D_out,U6D_out,U7D_out,U7E_out;
 
