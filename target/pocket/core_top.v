@@ -642,9 +642,7 @@ module core_top (
 	slapfight_fpga slapcore
 	(
 		.ram_clk(clk_74a),
-		.clkm_36MHZ(clk_sys),
-		.clkf_cpu(clk_cpu),
-		.clkaudio(clk_aud),
+		.clk_master(clk_sys),
 		.pcb(MODE),
 		
 		.RED(slapfight_rgb[11:8]),
@@ -739,7 +737,7 @@ module core_top (
         )
         sound_i2s (
             .clk_74a    ( clk_74a ),
-            .clk_audio  ( clk_aud ),
+            .clk_audio  ( clk_sys ),
             .audio_l    ( slapfight_snd_l[15:0] ),
             .audio_r    ( slapfight_snd_r[15:0] ),
 
@@ -751,9 +749,7 @@ module core_top (
     //! ------------------------------------------------------------------------------------
     //! Clocks
     //! ------------------------------------------------------------------------------------
-    wire clk_sys;        //! Core: 36.000Mhz
-    wire clk_cpu;        //! CPU:  12.000Mhz
-    wire clk_aud;        //! Audio:48.000Mhz
+    wire clk_sys;        //! Core: 48.000Mhz
     wire clk_vid;        //! Video: 6.000Mhz
     wire clk_vid_90deg;  //! Video: 6.000Mhz @ 90deg Phase Shift
     wire pll_core_locked;
@@ -763,10 +759,10 @@ module core_top (
             .rst      ( 0 ),
 
             .outclk_0 ( clk_sys         ),
-            .outclk_1 ( clk_cpu         ),
-            .outclk_2 ( clk_aud         ),
-            .outclk_3 ( clk_vid         ),
-            .outclk_4 ( clk_vid_90deg   ),
+            .outclk_1 ( clk_vid         ),
+            .outclk_2 ( clk_vid_90deg   ),
+            //.outclk_3 ( clk_vid         ),
+            //.outclk_4 ( clk_vid_90deg   ),
             .locked   ( pll_core_locked )
         );
     //! @end

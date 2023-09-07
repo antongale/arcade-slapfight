@@ -14,9 +14,7 @@
 
 module slapfight_fpga(
 	input ram_clk,
-	input clkm_36MHZ,
-	input	clkaudio,
-	input clkf_cpu,	
+	input clk_master,
 	input [7:0] pcb,	
 	output [3:0] RED,     	//from fpga core to sv
 	output [3:0] GREEN,		//from fpga core to sv
@@ -49,26 +47,30 @@ module slapfight_fpga(
 	input hs_write
 );
 
-//SLAPFIGHT - AUDIO CLOCKS
+//SLAPFIGHT - CLOCKS
 reg clkm_24MHZ, clkm_12MHZ, clkm_3MHZ, clkm_1p5MHZ,clkm_6MHZ;
-reg clkb_3MHZ,clkb_6MHZ;
+reg clkb_3MHZ,clkb_6MHZ,clkc_6MHZ;
+wire pixel_clk;
 
 //core clock generation logic based on jtframe code
 reg [4:0] cencnt =5'd0;
 
-always @(posedge clkaudio) begin
+always @(posedge clk_master) begin
 	cencnt  <= cencnt+5'd1;
 end
 
-always @(posedge clkaudio) begin //48
+always @(posedge clk_master) begin //48
 	clkm_24MHZ	  	<= cencnt[0]   == 1'd0;
 	clkm_12MHZ		<= cencnt[1:0] == 2'd0;
 	clkm_6MHZ		<= cencnt[2:0] == 3'd0;
 	clkb_6MHZ		<= cencnt[2:0] == 3'd4;	
+	clkc_6MHZ		<= cencnt[2:0] == 3'd6;		
    clkm_3MHZ		<= cencnt[3:0] == 4'd0;
    clkb_3MHZ		<= cencnt[3:0] == 4'd8;	
    clkm_1p5MHZ		<= cencnt[4:0] == 5'd0;		
 end
+
+assign pixel_clk=clkb_6MHZ;
 
 //SLAPFIGHT PIXEL REGISTERS & COUNTERS
 reg [7:0] VPIX,VSCRL_sum_in;
@@ -78,8 +80,6 @@ wire [7:0] VPIXSCRL;
 reg [11:0] HPIX;
 reg [8:0] HSCRL;
 reg [8:0] HPIXSCRL;
-
-
 reg LINE_CLK2;
 wire RESET_H_COUNTERS,RESET_V_COUNTERS;
 
@@ -93,7 +93,7 @@ wire LINE_CLK=!U1C_Q[2];
 
 wire [3:0] ROM15_out;
 ROM15 U8B_ROM15(
-    .clk(clkm_36MHZ),
+    .clk(clk_master),
     .addr({VCNT[8:1]}),
     .data({RESET_V_COUNTERS,ROM15_out[2:0]})
 );
@@ -103,11 +103,6 @@ wire U8E_cout;
 
 always @(posedge V_SCRL_SEL) VSCRL_sum_in<=(pcb==1) ? ({Z80A_databus_out[7:4],!IO2_SF,!IO2_SF,!IO2_SF,!IO2_SF}) : Z80A_databus_out; //AY1_IOB_in[7:5]
 always @(posedge H_SYNC) LINE_CLK2<=ROM15_out[1];
-
-//(pcb) ? 0 : 
-
-//always @(negedge CPU_RAM_SELECT) Z80M_INT=INT_ENABLE;
-
 
 ttl_7474 #(.BLOCKS(1), .DELAY_RISE(0), .DELAY_FALL(0)) U9H_A(
 	.n_pre(PUR),
@@ -147,7 +142,7 @@ end
 
 wire [3:0] ROM14_out;
 ROM14 U2C_ROM14(
-    .clk(clkm_36MHZ),
+    .clk(clk_master),
     .addr({IO2_SF,HPIX[8:2]}),
     .data({RESET_H_COUNTERS,ROM14_out[2:0]})
 );
@@ -210,17 +205,10 @@ ttl_74283 #(.WIDTH(4), .DELAY_RISE(0), .DELAY_FALL(0)) U1H(
 	.sum(U1H_sum),
 	.c_out(U1H_cout)
 );
-//SLAPFIGHT PIXEL COUNTERS
 
 //SLAPFIGHT REGISTERS
-
-
 reg [7:0] V_SCRL;    //0xE802
 reg [7:0] MCU_PORT;  //0xE803
-
-//SLAPFIGHT REGISTERS
-
-
 
 wire [10:0] FG_RAMA;
 wire FG_RAM_nOE;
@@ -231,13 +219,11 @@ wire FG_RAM_nWE2,FG_RAM_nWE1;
 not U3D_C(FG_RAM_nWE1,FG_RAM_nWE2);
 not U3D_D(FG_RAM_nWE,FG_RAM_nWE1);
 
-
-
 wire [7:0] FG_PX_D;
 wire [8:0] HPIX_LT;
 
 foreground_layer slap_foreground(
-	.master_clk(clkm_36MHZ),
+	.master_clk(clk_master),
 	.pixel_clk(pixel_clk),
 	.pcb(pcb),	
 	.VPIX(VPIX),
@@ -264,7 +250,7 @@ foreground_layer slap_foreground(
 
 background_layer slap_background(
 	.ram_clk(ram_clk),
-	.master_clk(clkm_36MHZ),
+	.master_clk(clk_master),
 	.pixel_clk(pixel_clk),
 	.pcb(pcb),
 	.VPIX(VPIX),	
@@ -298,10 +284,10 @@ background_layer slap_background(
 );
 
 sprite_layer slap_sprites(
-	.master_clk(clkm_36MHZ),
+	.master_clk(clk_master),
 	.pixel_clk(pixel_clk),
-	.npixel_clk(clk_6M_1),
-	.pixel_clk_lb(clk_6M_3),
+	.npixel_clk(clkm_6MHZ),
+	.pixel_clk_lb(clkc_6MHZ),
 	.pcb(pcb),	
 	.VPIX(VPIX),
 	.HPIX(HPIX),
@@ -333,49 +319,6 @@ wire [7:0] BG_HI_out;
 wire [7:0] BG_LO_out;
 wire [7:0] SP_RAMD_out;
 
-//SLAPFIGHT CLOCKS
-reg clk_12M, maincpuclk_6M, aucpuclk_3M, ayclk_1p5M;
-reg clk_18M; 
-wire clk_6M_1,pixel_clk,clk_6M_3;
-
-reg [3:0] clk_counter_8F;
-reg [3:0] clk_counter_7G;
-
-reg [3:0] clk_counter;
-
-always @(posedge clkm_36MHZ) begin
-
-	if (clk_counter_8F==15) begin
-		clk_counter_7G<=clk_counter_7G+4'd1;
-		clk_counter_8F<=13;
-	end
-	else begin
-		clk_counter_8F<=clk_counter_8F+4'd1;
-	end
-	maincpuclk_6M<=clk_counter_7G[0];
-	aucpuclk_3M<=clk_counter_7G[1];
-	ayclk_1p5M<=clk_counter_7G[2];
-	
-	clk_counter<=clk_counter+4'd1;
-end
-
-wire [3:0] U6Q_in;
-reg [3:0] U6Q_out;
-
-assign	U6Q_in[0]=!U6Q_out[2];
-assign	U6Q_in[1]=U6Q_out[0];
-assign	U6Q_in[2]=!U6Q_out[1];
-
-always @(posedge clk_counter[0]) begin
-
-	U6Q_out[0]<=U6Q_in[0];
-	U6Q_out[1]<=U6Q_in[1];
-	U6Q_out[2]<=U6Q_in[2];
-end
-//SLAPFIGHT CLOCKS
-assign clk_6M_1=U6Q_out[0];
-assign pixel_clk=!U6Q_out[0];
-assign clk_6M_3=!U6Q_out[2];
 
 
 wire PUR = 1'b1;
@@ -400,7 +343,7 @@ T80pa Z80A(
 	.INT_n(Z80M_INT), //
 	.BUSRQ_n(PUR),
 	.NMI_n(PUR),
-	.CLK(clkaudio), ////clkf_cpu
+	.CLK(clk_master), ////clkf_cpu
 	.CEN_p(clkm_6MHZ), //maincpuclk_6M
 	.CEN_n(clkb_6MHZ), //!maincpuclk_6M
 	.MREQ_n(Z80_MREQ),
@@ -416,7 +359,7 @@ wire RD_BUFFER_FULL_68705,WR_BUFFER_FULL_68705;
 
 //CPU read selection logic
 // ******* PRIMARY CPU IC SELECTION LOGIC FOR TILE, SPRITE, SOUND & GAME EXECUTION ********
-always @(posedge maincpuclk_6M) begin
+always @(posedge clkm_6MHZ) begin
 
  
 		rZ80A_databus_in <=	(!(SEL_ROM0A)&!Z80_RD) 		? prom_prog1_out:  //&!Z80_RD implied
@@ -454,7 +397,7 @@ ttl_7474 #(.BLOCKS(1), .DELAY_RISE(0), .DELAY_FALL(0)) S2_U9A_A(
 	.n_pre(PUR),
 	.n_clr(PUR),
 	.d(AUDIOM_OK),
-	.clk(maincpuclk_6M),
+	.clk(clkm_6MHZ),
 	.q(AU_RDY2),
 	.n_q(AU_RDY)
 );
@@ -497,13 +440,13 @@ mux1_8 U9J( //sf
 //main CPU (Z80A) work RAM - dual port RAM for hi-score logic
 dpram_dc #(.widthad_a(11)) U8M_Z80M_RAM //sf
 (
-	.clock_a(clkm_36MHZ),
+	.clock_a(clk_master),
 	.address_a(Z80A_addrbus[10:0]),
 	.data_a(Z80A_databus_out),
 	.wren_a(!Z80_WR & !SEL_Z80M_RAM),
 	.q_a(U8M_Z80M_RAM_out),
 	
-	.clock_b(clkm_36MHZ),
+	.clock_b(clk_master),
 	.address_b(hs_address[10:0]),
 	.data_b(hs_data_in),
 	.wren_b(hs_write),
@@ -516,10 +459,10 @@ dpram_dc #(.widthad_a(11)) U8M_Z80M_RAM //sf
 eprom_0 U8N_A77_00
 (
 	.ADDR(Z80A_addrbus[13:0]),//tiger heli rom size reduction
-	.CLK(clkm_36MHZ),//
+	.CLK(clk_master),//
 	.DATA(prom_prog1_out),//
 	.ADDR_DL(dn_addr),
-	.CLK_DL(clkm_36MHZ),//
+	.CLK_DL(clk_master),//
 	.DATA_IN(dn_data),
 	.CS_DL(ep0_cs_i),
 	.WR(dn_wr)
@@ -529,10 +472,10 @@ eprom_0 U8N_A77_00
 eprom_0b U8N_A77_00b //tiger heli ROM addition
 (
 	.ADDR(Z80A_addrbus[13:0]),//
-	.CLK(clkm_36MHZ),//
+	.CLK(clk_master),//
 	.DATA(prom_prog1b_out),//
 	.ADDR_DL(dn_addr),
-	.CLK_DL(clkm_36MHZ),//
+	.CLK_DL(clk_master),//
 	.DATA_IN(dn_data),
 	.CS_DL(ep0b_cs_i),
 	.WR(dn_wr)
@@ -542,10 +485,10 @@ eprom_0b U8N_A77_00b //tiger heli ROM addition
 eprom_1 U8P_A77_01
 (
 	.ADDR({SEL_ROM_BANK_SH,Z80A_addrbus[13:0]}),//
-	.CLK(clkm_36MHZ),//
+	.CLK(clk_master),//
 	.DATA(prom_prog2_out),//
 	.ADDR_DL(dn_addr),
-	.CLK_DL(clkm_36MHZ),//
+	.CLK_DL(clk_master),//
 	.DATA_IN(dn_data),
 	.CS_DL(ep1_cs_i),
 	.WR(dn_wr)
@@ -619,7 +562,7 @@ T80pa Z80B(
 	.INT_n(PUR),
 	.BUSRQ_n(AUDIO_CPU_PORT),
 	.NMI_n(AUDIO_CPU_NMI),
-	.CLK(clkaudio), //maincpuclk_6M
+	.CLK(clk_master), //maincpuclk_6M
 	.CEN_p(clkm_3MHZ), //aucpuclk_3M
 	.CEN_n(clkb_3MHZ), //!aucpuclk_3M
 	.MREQ_n(AUIMREQ),
@@ -641,13 +584,13 @@ assign AUA = (AUDIOM_OK) ? CPU_AUA : Z80A_addrbus;  //when main CPU has control 
 //Audio CPU (Z80AU) work RAM - dual port RAM to main CPU (alternative configuration)
 dpram_dc #(.widthad_a(11)) S2_U11B //sf
 (
-	.clock_a(clkm_36MHZ),
+	.clock_a(clk_master),
 	.address_a(CPU_AUA[10:0]),
 	.data_a(AUD_out),
 	.wren_a(!AUWR & !AU_RAM_CS),
 	.q_a(AUDIO_RAM_out),
 	
-	.clock_b(clkm_36MHZ),
+	.clock_b(clk_master),
 	.address_b(Z80A_addrbus[10:0]),
 	.data_b(Z80A_databus_out),
 	.wren_b(!AUDIOM_OK & !Z80_WR),
@@ -694,7 +637,7 @@ wire signed [15:0] audio_snd;
 
 jt49_bus AY_1_S2_U11G(
     .rst_n(AU_ENABLE),
-    .clk(clkaudio),    						// signal on positive edge 
+    .clk(clk_master),    						// signal on positive edge 
     .clk_en(clkm_1p5MHZ),  				/* synthesis direct_enable = 1 */
     
     .bdir(AY_1_BDIR),						// bus control pins of original chip
@@ -716,7 +659,7 @@ jt49_bus AY_1_S2_U11G(
 
 jt49_bus AY_2_S2_11J(
     .rst_n(AU_ENABLE),
-    .clk(clkaudio),    						// signal on positive edge
+    .clk(clk_master),    						// signal on positive edge
     .clk_en(clkm_1p5MHZ),  				/* synthesis direct_enable = 1 */
     
     .bdir(AY_2_BDIR),	 					// bus control pins of original chip
@@ -739,7 +682,7 @@ jt49_bus AY_2_S2_11J(
 
 jtframe_jt49_filters u_filters1(
             .rst    ( 1'b0    ),
-            .clk    ( clkaudio     ),
+            .clk    ( clk_master     ),
             .din0   ( sound_outF ),
             .din1   ( sound_outV ), 
             .sample ( AY12F_sample ),
@@ -787,11 +730,11 @@ wire [7:0]  S2_U12D_AU_A77_02_out;
 eprom_2 S2_U12D_AU_A77_02  //Audio Program ROM
 (
 	.ADDR(CPU_AUA[12:0]),
-	.CLK(clkm_36MHZ),
+	.CLK(clk_master),
 	.DATA(S2_U12D_AU_A77_02_out),
 
 	.ADDR_DL(dn_addr),
-	.CLK_DL(clkm_36MHZ),
+	.CLK_DL(clk_master),
 	.DATA_IN(dn_data),
 	.CS_DL(ep2_cs_i),
 	.WR(dn_wr)
@@ -823,7 +766,7 @@ reg AU_INT_ON=1'b0;
 wire nRST_AU=!AU_ENABLE|AU_INT_ON|!RESET_n;
 
 always @(posedge AUD_INT_CLK or negedge RESET_n) AU_INT_ON<=(!RESET_n) ? 1'b1 : 1'b0; //Initialize audio interrupt
-always @(posedge aucpuclk_3M or posedge nRST_AU) U7A_TMR_out <= (nRST_AU) ? 0 : U7A_TMR_out+1;
+always @(posedge clkm_3MHZ or posedge nRST_AU) U7A_TMR_out <= (nRST_AU) ? 0 : U7A_TMR_out+1;
 
 always @(*) AUDIO_CPU_NMI<= (pcb==1) ? !U7A_TMR_out[12] : !U7A_TMR_out[13]; //change interrupt timing for Tiger Heli board 
 
@@ -844,11 +787,11 @@ end
 cprom_1 S2_U12Q  //Red Colour PROM
 (
 	.ADDR(COLOUR_REG),//
-	.CLK(clkm_36MHZ),//
+	.CLK(clk_master),//
 	.DATA(RED),//
 
 	.ADDR_DL(dn_addr),
-	.CLK_DL(clkm_36MHZ),//
+	.CLK_DL(clk_master),//
 	.DATA_IN(dn_data),
 	.CS_DL(cp1_cs_i),
 	.WR(dn_wr)
@@ -857,11 +800,11 @@ cprom_1 S2_U12Q  //Red Colour PROM
 cprom_2 S2_U12P  //Blue Colour PROM
 (
 	.ADDR(COLOUR_REG),//
-	.CLK(clkm_36MHZ),//
+	.CLK(clk_master),//
 	.DATA(BLUE),//
 
 	.ADDR_DL(dn_addr),
-	.CLK_DL(clkm_36MHZ),//
+	.CLK_DL(clk_master),//
 	.DATA_IN(dn_data),
 	.CS_DL(cp2_cs_i),
 	.WR(dn_wr)
@@ -870,11 +813,11 @@ cprom_2 S2_U12P  //Blue Colour PROM
 cprom_3 S2_U12N  //Green Colour PROM
 (
 	.ADDR(COLOUR_REG),//
-	.CLK(clkm_36MHZ),//
+	.CLK(clk_master),//
 	.DATA(GREEN),//
 
 	.ADDR_DL(dn_addr),
-	.CLK_DL(clkm_36MHZ),//
+	.CLK_DL(clk_master),//
 	.DATA_IN(dn_data),
 	.CS_DL(cp3_cs_i),
 	.WR(dn_wr)
